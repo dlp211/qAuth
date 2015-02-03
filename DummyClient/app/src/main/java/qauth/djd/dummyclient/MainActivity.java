@@ -156,10 +156,11 @@ public class MainActivity extends ActionBarActivity {
         protected String doInBackground(String... params) {
 
             Gson gson = new GsonBuilder().create();
-            Map<String, String> newLoop = new HashMap<String, String>();
+            Map<String, String> newLoop =
+                    new HashMap<String, String>();
             newLoop.put("username", this.username);
-            newLoop.put("password", this.password);
-
+            newLoop
+                    .put("password", this.password);
             String json = gson.toJson(newLoop, Map.class);
             Log.i("LoginTask", "json: " + json);
             try {

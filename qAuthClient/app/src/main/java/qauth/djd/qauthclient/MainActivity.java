@@ -1,10 +1,12 @@
 package qauth.djd.qauthclient;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -52,6 +54,7 @@ public class MainActivity extends ActionBarActivity {
     GifView gifView;
     private GoogleApiClient client;
     static Context ctx;
+    static Activity act;
     static TextView tv2;
 
     public static final String EXTRA_MESSAGE = "message";
@@ -83,6 +86,7 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ctx = this;
+        act = this;
 
         tv2 = (TextView) findViewById(R.id.textView2);
         mDisplay = tv2;
@@ -124,7 +128,7 @@ public class MainActivity extends ActionBarActivity {
 
     */
 
-        /*Handler handler = new Handler();
+        Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
                 tv2.setText("Sending Watch Id");
@@ -138,6 +142,9 @@ public class MainActivity extends ActionBarActivity {
             }
         }, 3500);
 
+        Log.i(TAG, "logcat test");
+
+        /*
         handler.postDelayed(new Runnable() {
             public void run() {
                 new GetTokenTask("007").execute();
@@ -409,7 +416,7 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    private class GetTokenTask extends AsyncTask<String, Void, String> {
+    public static class GetTokenTask extends AsyncTask<String, Void, String> {
 
         public String watchId;
 
@@ -438,10 +445,10 @@ public class MainActivity extends ActionBarActivity {
         protected void onPostExecute(String result) {
             if ( result != null ){
                 Log.i("GetTokenTask", "results: " + result);
-                Intent intent = getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
+                Intent intent = ctx.getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
                 intent.putExtra("qauthToken", result);
-                startActivity(intent);
-                finish();
+                ctx.startActivity(intent);
+                act.finish();
             } else {
                 Log.i("GetTokenTask", "No internet connection");
                 //Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show();
