@@ -96,7 +96,7 @@ func init() {
         w.WriteHeader(http.StatusUnauthorized)
       } else {
         val.bluetoothId = append(val.bluetoothId, reg.BluetoothId)
-        G_DB[reg.userName] = val
+        G_DB[reg.UserName] = val
         w.WriteHeader(http.StatusAccepted)
       }
     } else {
