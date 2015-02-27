@@ -60,13 +60,15 @@ func init() {
     err := json.NewDecoder(r.Body).Decode(&reg)
     if err != nil { panic( err ) }
     if _, ok := G_DB[reg.UserName]; ok {
-
+      w.WriteHeader(StatusConflict)
     } else {
+      w.WriteHeader(StatusAccepted)
       G_DB[reg.UserName] = DbEntry_t{ reg.Password, []string{reg.DeviceId} }
     }
     for k,v := range G_DB {
       fmt.Println(k , v)
     }
+    w.Write()
   }
 }
 

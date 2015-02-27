@@ -7,7 +7,9 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings.Secure;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -43,11 +45,21 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.Key;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.crypto.Cipher;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -96,6 +108,7 @@ public class MainActivity extends ActionBarActivity {
         if (checkPlayServices()) {
             gcm = GoogleCloudMessaging.getInstance(this);
             regid = getRegistrationId(context);
+            Log.i(TAG, "regId: " + regid);
 
             if (regid.isEmpty()) {
                 registerInBackground();
@@ -108,25 +121,38 @@ public class MainActivity extends ActionBarActivity {
         GifView gif_view = (GifView) findViewById(R.id.testGifView );
         gif_view.setGifImageResourceID(R.raw.green);
 
-        //new FindWatchTask().execute();
+        String android_id = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
+        Log.i(TAG, "android_id: " + android_id);
 
+        try {
 
-    /*
+            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+            byte[] input = "abc".getBytes();
+            Cipher cipher = Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", "BC");
+            SecureRandom random = new SecureRandom();
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "BC");
 
-        new Runnable() {
-            public void run() {
-                TextView tv3 = (TextView) findViewById(R.id.bluetoothDevices);
-                client = getGoogleApiClient(getApplicationContext());
-                List<Node> connectedNodes =
-                        Wearable.NodeApi.getConnectedNodes(client).await().getNodes();
+            generator.initialize(1024, random);
 
-                for ( Node node : connectedNodes ){
-                    tv3.setText( tv3.getText() + " | " + node.getDisplayName() + " " + node.getId() );
-                }
-            }
-        }.run();
+            KeyPair pair = generator.generateKeyPair();
+            Key pubKey = pair.getPublic();
 
-    */
+            Key privKey = pair.getPrivate();
+
+            //Log.i(TAG, "pubKey: " + pubKey.toString() );
+            //Log.i(TAG, "privKey: " + privKey.toString() );
+
+            cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
+            byte[] cipherText = cipher.doFinal(input);
+            //Log.i(TAG, "cipher: " + new String(cipherText));
+
+            cipher.init(Cipher.DECRYPT_MODE, privKey);
+            byte[] plainText = cipher.doFinal(cipherText);
+            //Log.i(TAG, "plain : " + new String(plainText));
+
+        } catch (Exception e) {
+
+        }
 
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -143,6 +169,8 @@ public class MainActivity extends ActionBarActivity {
         }, 3500);
 
         Log.i(TAG, "logcat test");
+
+        new GetTokenTask("007").execute();
 
         /*
         handler.postDelayed(new Runnable() {
@@ -233,20 +261,6 @@ public class MainActivity extends ActionBarActivity {
     }
 
     /**
-     * @return Application's version code from the {@code PackageManager}.
-     */
-    /*private static int getAppVersion(Context context) {
-        try {
-            PackageInfo packageInfo = context.getPackageManager()
-                    .getPackageInfo(context.getPackageName(), 0);
-            return packageInfo.versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-            // should never happen
-            throw new RuntimeException("Could not get package name: " + e);
-        }
-    }*/
-
-    /**
      * Registers the application with GCM servers asynchronously.
      * <p>
      * Stores the registration ID and app versionCode in the application's
@@ -263,25 +277,12 @@ public class MainActivity extends ActionBarActivity {
                     }
                     regid = gcm.register(SENDER_ID);
                     msg = "Device registered, registration ID=" + regid;
-                    //tv2.append( msg );
                     Log.i(TAG, msg);
-                    // You should send the registration ID to your server over HTTP,
-                    // so it can use GCM/HTTP or CCS to send messages to your app.
-                    // The request to your server should be authenticated if your app
-                    // is using accounts.
+
                     sendRegistrationIdToBackend();
-
-                    // For this demo: we don't need to send it because the device
-                    // will send upstream messages to a server that echo back the
-                    // message using the 'from' address in the message.
-
-                    // Persist the regID - no need to register again.
                     storeRegistrationId(context, regid);
                 } catch (IOException ex) {
                     msg = "Error :" + ex.getMessage();
-                    // If there is an error, don't just keep trying to register.
-                    // Require the user to click a button again, or perform
-                    // exponential back-off.
                 }
                 return msg;
             }
@@ -347,21 +348,16 @@ public class MainActivity extends ActionBarActivity {
         protected String doInBackground(String... params) {
 
             try {
-                Log.i("yo", "testing");
                 TextView tv3 = (TextView) findViewById(R.id.bluetoothDevices);
                 client = getGoogleApiClient(ctx);
-                Log.i("yo", "testing2");
                 List<Node> connectedNodes =
                         Wearable.NodeApi.getConnectedNodes(client).await().getNodes();
-                Log.i("yo", "testing3");
                 for (Node node : connectedNodes) {
                     tv3.setText(tv3.getText() + " | " + node.getDisplayName() + " " + node.getId());
                 }
-                Log.i("yo", "testing4");
             } catch (Exception e){
-                Log.i("exceptionnn", "EXCEPTIONNNNN: " + e);
+                Log.i("exceptionnn", "E: " + e);
             }
-            Log.i("yo", "sup");
             return null;
         }
 
@@ -432,6 +428,9 @@ public class MainActivity extends ActionBarActivity {
             newLoop.put("watchId", this.watchId);
 
             String json = gson.toJson(newLoop, Map.class);
+
+            //encrypt json
+
             Log.i("LoginTask", "json: " + json);
             try {
                 return EntityUtils.toString(makeRequest("http://107.170.156.222:8080/gettoken", json).getEntity());
@@ -444,7 +443,108 @@ public class MainActivity extends ActionBarActivity {
 
         protected void onPostExecute(String result) {
             if ( result != null ){
+
+                byte[] plainText = "test".getBytes();
+
+                try {
+
+                    /*//decrypt result
+                    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+                    byte[] input = "abc".getBytes();
+                    Cipher cipher = Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", "BC");
+                    //SecureRandom random = new SecureRandom();
+                    //KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "BC");
+
+                    //generator.initialize(1024, random);
+
+                    String modulusString = "bd96a14af1dc72b14bd2864b4cde1023d3755fa071f68ac4619dfa7d9117985f4a1355069dffc100093945d945b4c1791a906034feeef95ebfc26b98161d0aecc6ceb785bec4a1ecd707db9b8877fef3f54b0b2d31cfe3e6053cb016dce28f7beee56d3d90da7bdee9668ce7ec3b635abe63b5c3594db500d3d157b7c399371f";
+                    String exponentString = "9380d75ac4d41c13df071b5f089e18f696b5d241b588f8ac13bae2c1c11a177dc3d748a6ce54c6a72d85f6d735898da1984e4ddbcda0c639b67e2052029a73fd2d5e9c09af9b730e0bb61042f28c2443ca69fb42c4839f858a8b6622ebaf04e946d5e8016043bf6e0c2389c4a1b3b1cd9d74107a52fd53ee5ed5ac9c2c422429";
+
+                    //BigInteger modulus2 = new BigInteger(hexStringToByteArray(modulusString));
+                    //BigInteger exponent2 = new BigInteger(hexStringToByteArray(exponentString));
+                    BigInteger modulus = new BigInteger(modulusString, 10);
+                    BigInteger exponent = new BigInteger(exponentString, 10);
+
+                    //RSAPrivateKeySpec privateSpec = new RSAPrivateKeySpec(modulus, exponent);
+                    //KeyFactory factory = KeyFactory.getInstance("RSA");
+
+                    //PrivateKey priv = factory.generatePrivate(privateSpec);
+
+                    //byte[] encodedKey     = Base64.decode(modulusString, Base64.DEFAULT);
+                    //SecretKey originalKey = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
+                    PrivateKey privKey = KeyFactory.getInstance("RSA").generatePrivate(new RSAPrivateKeySpec(modulus, exponent));
+
+                    cipher.init(Cipher.DECRYPT_MODE, privKey);
+                    plainText = cipher.doFinal(result.getBytes());*/
+
+
+/*
+                    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+                    keyGen.initialize(1024);
+                    KeyPair keypair = keyGen.genKeyPair();
+                    PrivateKey privateKey = keypair.getPrivate();
+                    PublicKey publicKey = keypair.getPublic();
+
+                    KeyFactory fact = KeyFactory.getInstance("RSA");
+                    RSAPublicKeySpec pub = fact.getKeySpec(publicKey, RSAPublicKeySpec.class);
+                    RSAPrivateKeySpec priv = fact.getKeySpec(privateKey, RSAPrivateKeySpec.class);
+
+                    BigInteger pubModulus = pub.getModulus();
+                    BigInteger pubExponent = pub.getPublicExponent();
+
+                    BigInteger privModulus = priv.getModulus();
+                    BigInteger privExponent = priv.getPrivateExponent();
+
+                    //Log.i("private", "privModulus: " + pub. );
+                    //Log.i("private", "privExponent: " + privExponent.toByteArray() );
+                    //Log.i("public", "pubModulus: " + pubModulus.toByteArray() );
+                    //Log.i("public", "pubExponent: " + pubExponent.toByteArray() );
+
+
+
+                    //X509EncodedKeySpec x509ks = new X509EncodedKeySpec(
+                      //      publicKey.getEncoded());
+
+
+                    //RSAPublicKeySpec keySpec = new RSAPublicKeySpec(modulus, exponent);
+                    //KeyFactory fact = KeyFactory.getInstance("RSA");
+                    //PublicKey pubKey = fact.generatePublic(keySpec);
+
+                    RSAPrivateKeySpec privKeySpec = new RSAPrivateKeySpec(privModulus, privExponent);
+                   // KeyFactory fact = KeyFactory.getInstance("RSA");
+                    PrivateKey privKey = fact.generatePrivate(privKeySpec);
+
+
+                    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+                    byte[] input = "testing my message".getBytes();
+                    Cipher cipher = Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", "BC");
+
+                    cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+                    byte[] cipherText = cipher.doFinal(input);
+
+                    Log.i("encryption", "encrypted2: " + new String(cipherText) );
+
+                    cipher.init(Cipher.DECRYPT_MODE, privKey);
+                    byte[] cipherText2 = cipher.doFinal(cipherText);
+
+                    Log.i("decryption", "decrypted2: " + new String(cipherText2) );
+*/
+
+                    //RSAPublicKeySpec keySpec = new RSAPublicKeySpec(modulus, exponent);
+                    //KeyFactory fact = KeyFactory.getInstance("RSA");
+                    //PublicKey pubKey = fact.generatePublic(keySpec);
+
+                } catch (Exception e) {
+                    Log.i("GetTokenTask", "exception: " + e);
+                    e.printStackTrace();
+                }
+
                 Log.i("GetTokenTask", "results: " + result);
+                if ( plainText != null ) {
+                    Log.i("GetTokenTask", "results2: " + new String(plainText) );
+                } else {
+                    Log.i("GetTokenTask", "results2: error");
+                }
                 Intent intent = ctx.getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
                 intent.putExtra("qauthToken", result);
                 ctx.startActivity(intent);
@@ -455,6 +555,21 @@ public class MainActivity extends ActionBarActivity {
             }
         }
 
+    }
+
+    public static PublicKey getKey(String key){
+        try{
+            byte[] byteKey = Base64.decode(key.getBytes(), Base64.DEFAULT);
+            X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+
+            return kf.generatePublic(X509publicKey);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
 }
