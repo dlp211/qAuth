@@ -13,6 +13,7 @@ type watch_struct struct {
   WatchId string `json:"watchId"`
 }
 
+/* JSON Types */
 type registration_t struct {
   UserName string `json:"email"`
   Password string `json:"password"`
@@ -25,18 +26,37 @@ type registerBT_t struct {
   BluetoothId string `json:"bluetoothId"`
 }
 
+type provider_t struct {
+  Provider string `json:"provider"`
+  Key string `json:"key"`
+  Package string `json:"package"`
+  Callback string `json:"callback"`
+}
 
+type providerList_t struct {
+  Packages []string `json:"packages"`
+}
+
+
+/* DB Structs */
 type DbEntry_t struct {
   password string
   deviceId []string
   bluetoothId []string
 }
 
+type DbProv_t struct {
+  key string
+  packageName string
+  callback string
+}
+
 /* Rest handler map */
 var G_Rest = map[string]func(http.ResponseWriter, *http.Request){}
 
-/* Map as our DB */
+/* Maps as our DB tables */
 var G_DB = map[string]DbEntry_t{}
+var G_DB_PROVIDERS = map[string]DbProv_t{}
 
 func init() {
   G_Rest["/gettoken"] =
@@ -74,12 +94,12 @@ func init() {
       w.WriteHeader(http.StatusConflict)
     } else {
       //validate email
-      w.WriteHeader(http.StatusAccepted)
       G_DB[reg.UserName] = DbEntry_t{
         reg.Password,
         []string{reg.DeviceId},
         []string{},
       }
+      w.WriteHeader(http.StatusAccepted)
     }
     for k,v := range G_DB {
       fmt.Println(k , v)
@@ -106,6 +126,48 @@ func init() {
       fmt.Println(k , v)
     }
   }
+
+  G_Rest["/provider"] =
+  func (w http.ResponseWriter, r *http.Request) {
+    var prov provider_t
+    err := json.NewDecoder(r.Body).Decode(&prov)
+    if err != nil { panic( err ) }
+    if _, ok := G_DB[prov.Provider]; ok {
+      w.WriteHeader(http.StatusConflict)
+    } else {
+      G_DB_PROVIDERS[prov.Provider] = DbProv_t{
+        prov.Key,
+        prov.Package,
+        prov.Callback,
+      }
+    }
+    for k,v := range G_DB_PROVIDERS {
+      fmt.Println(k , v)
+    }
+  }
+
+  G_Rest["/provider/available"] =
+  func (w http.ResponseWriter, r *http.Request) {
+    var list providerList_t
+    for _,v := range G_DB_PROVIDERS {
+      list.Packages = append(list.Packages, v.packageName)
+    }
+    writeOut, err := json.Marshal(list)
+    if err != nil { panic(err) }
+    w.Write(writeOut)
+  }
+
+  G_Rest["/provider/activate"] =
+  func (w http.ResponseWriter, r *http.Request) {
+    fmt.Println()
+  }
+
+  G_Rest["/provider/deactivate"] =
+  func (w http.ResponseWriter, r *http.Request) {
+    fmt.Println()
+  }
+
+
 
 }
 
