@@ -9,6 +9,7 @@ import (
   "encoding/gob"
   "log"
   "os"
+ // "crypto/rsa"
 )
 
 /* logging functionality */
@@ -47,6 +48,8 @@ type registration_t struct {
   UserName string `json:"email"`
   Password string `json:"password"`
   DeviceId string `json:"deviceId"`
+  PKN string `json:"publicKey_n"`
+  PKE int `json:"publicKey_e"`
 }
 
 type registerBT_t struct {
@@ -66,12 +69,17 @@ type providerList_t struct {
   Packages []string `json:"packages"`
 }
 
+type publicKey_t struct {
+  n string
+  e int
+}
 
 /* DB Structs */
 type DbEntry_t struct {
   password string
   deviceId []string
   bluetoothId []string
+  pk publicKey_t
 }
 
 type DbProv_t struct {
@@ -153,6 +161,7 @@ func init() {
         reg.Password,
         []string{reg.DeviceId},
         []string{},
+        publicKey_t{reg.PKN, reg.PKE},
       }
       INFO("User " + reg.UserName + " successfully registered with deviceId: " + reg.DeviceId)
       w.WriteHeader(http.StatusAccepted)
