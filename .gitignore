@@ -6,4 +6,4 @@
 /build
 *.swp
 qAuthServer/bin
-
+qAuthServer/pkg
