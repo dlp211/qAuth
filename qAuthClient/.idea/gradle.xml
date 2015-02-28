@@ -8,8 +8,8 @@
         <option name="gradleHome" value="$APPLICATION_HOME_DIR$/gradle/gradle-2.2.1" />
         <option name="modules">
           <set>
-            <option value="$USER_HOME$/Documents/workspace/qAuth/qAuthClient" />
-            <option value="$USER_HOME$/Documents/workspace/qAuth/qAuthClient/app" />
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/app" />
           </set>
         </option>
       </GradleProjectSettings>
