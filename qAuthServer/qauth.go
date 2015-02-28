@@ -6,7 +6,34 @@ import (
   "bytes"
   "io/ioutil"
   "encoding/json"
+  "log"
 )
+
+/* logging functionality */
+func precolor(color string) string {
+  return "\033[" + color + "m"
+}
+
+
+func PANIC(str string) {
+  log.SetPrefix(precolor("31;05;9") + "PANIC: ")
+  log.Printf(str + "\033[0m")
+}
+
+func WARN(str string) {
+  log.SetPrefix(precolor("38;05;9") + "WARN: ")
+  log.Printf(str + "\033[0m")
+}
+
+func INFO(str string) {
+  log.SetPrefix(precolor("38;05;2") + "INFO: ")
+  log.Printf(str + "\033[0m")
+}
+
+func DEBUG(str string) {
+  log.SetPrefix(precolor("38;05;4") + "DEBUG: ")
+  log.Printf(str + "\033[0m")
+}
 
 /* STRUCTURES */
 type watch_struct struct {
@@ -51,6 +78,30 @@ type DbProv_t struct {
   callback string
 }
 
+
+func sendToken(token string, userId string) { //eventually support sending to multiple servers
+  url := "http://107.170.156.222:8081/givetoken"
+  //fmt.Println("URL:>", url)
+
+  var jsonStr = []byte(`{"token":"token007","userId":"1"}`)
+  req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+  req.Header.Set("Content-Type", "application/json")
+
+  client := &http.Client{}
+  resp, err := client.Do(req)
+  if err != nil {
+    panic(err)
+  }
+  defer resp.Body.Close()
+
+
+  INFO(fmt.Sprintf("response Status:", resp.Status))
+  INFO(fmt.Sprintf("response Headers:", resp.Header))
+
+  body, _ := ioutil.ReadAll(resp.Body)
+  INFO(fmt.Sprintf("*ANDROID POST* response: ", string(body)))
+}
+
 /* Rest handler map */
 var G_Rest = map[string]func(http.ResponseWriter, *http.Request){}
 
@@ -87,10 +138,12 @@ func init() {
 
   G_Rest["/register"] =
   func (w http.ResponseWriter, r *http.Request) {
+    INFO("/register")
     var reg registration_t
     err := json.NewDecoder(r.Body).Decode(&reg)
     if err != nil { panic( err ) }
     if _, ok := G_DB[reg.UserName]; ok {
+      WARN("User " + reg.UserName + " attempted to reregister" )
       w.WriteHeader(http.StatusConflict)
     } else {
       //validate email
@@ -99,40 +152,63 @@ func init() {
         []string{reg.DeviceId},
         []string{},
       }
+      INFO("User " + reg.UserName + " successfully reregister with deviceId: " + reg.DeviceId)
       w.WriteHeader(http.StatusAccepted)
-    }
-    for k,v := range G_DB {
-      fmt.Println(k , v)
     }
   }
 
   G_Rest["/register/bluetooth"] =
   func (w http.ResponseWriter, r *http.Request) {
+    INFO("/register/bluetooth")
     var reg registerBT_t
     err := json.NewDecoder(r.Body).Decode(&reg)
     if err != nil { panic( err ) }
     if val, ok := G_DB[reg.UserName]; ok {
       if val.password != reg.Password {
+        WARN("User " + reg.UserName + " failed to authenticate" )
         w.WriteHeader(http.StatusUnauthorized)
       } else {
+        INFO("User " + reg.UserName + " registerer BluetoothId: " + reg.BluetoothId )
         val.bluetoothId = append(val.bluetoothId, reg.BluetoothId)
         G_DB[reg.UserName] = val
         w.WriteHeader(http.StatusAccepted)
       }
     } else {
+      INFO("User " + reg.UserName + " not found" )
       w.WriteHeader(http.StatusConflict)
     }
-    for k,v := range G_DB {
-      fmt.Println(k , v)
+  }
+
+  G_Rest["/register/device"] =
+  func (w http.ResponseWriter, r *http.Request) {
+    INFO("/register/device")
+    var reg registration_t
+    err := json.NewDecoder(r.Body).Decode(&reg)
+    if err != nil { panic( err ) }
+    if val, ok := G_DB[reg.UserName]; ok {
+      if val.password != reg.Password {
+        WARN("User " + reg.UserName + " failed to authenticate" )
+        w.WriteHeader(http.StatusUnauthorized)
+      } else {
+        INFO("User " + reg.UserName + " registerer BluetoothId: " + reg.DeviceId )
+        val.deviceId = append(val.deviceId, reg.DeviceId)
+        G_DB[reg.UserName] = val
+        w.WriteHeader(http.StatusAccepted)
+      }
+    } else {
+      INFO("User " + reg.UserName + " not found" )
+      w.WriteHeader(http.StatusConflict)
     }
   }
 
   G_Rest["/provider"] =
   func (w http.ResponseWriter, r *http.Request) {
+    INFO("/provider")
     var prov provider_t
     err := json.NewDecoder(r.Body).Decode(&prov)
     if err != nil { panic( err ) }
     if _, ok := G_DB[prov.Provider]; ok {
+      WARN("Provider " + prov.Provider + " attempted to reregister" )
       w.WriteHeader(http.StatusConflict)
     } else {
       G_DB_PROVIDERS[prov.Provider] = DbProv_t{
@@ -140,14 +216,13 @@ func init() {
         prov.Package,
         prov.Callback,
       }
-    }
-    for k,v := range G_DB_PROVIDERS {
-      fmt.Println(k , v)
+      INFO("Provider " + prov.Provider + " successfully registered with Key: " + prov.Key)
     }
   }
 
   G_Rest["/provider/available"] =
   func (w http.ResponseWriter, r *http.Request) {
+    INFO("/provider/available")
     var list providerList_t
     for _,v := range G_DB_PROVIDERS {
       list.Packages = append(list.Packages, v.packageName)
@@ -166,9 +241,6 @@ func init() {
   func (w http.ResponseWriter, r *http.Request) {
     fmt.Println()
   }
-
-
-
 }
 
 
@@ -186,23 +258,3 @@ func main() {
 }
 
 
-func sendToken(token string, userId string) { //eventually support sending to multiple servers
-  url := "http://107.170.156.222:8081/givetoken"
-  //fmt.Println("URL:>", url)
-
-  var jsonStr = []byte(`{"token":"token007","userId":"1"}`)
-  req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-  req.Header.Set("Content-Type", "application/json")
-
-  client := &http.Client{}
-  resp, err := client.Do(req)
-  if err != nil {
-    panic(err)
-  }
-  defer resp.Body.Close()
-
-  //fmt.Println("response Status:", resp.Status)
-  //fmt.Println("response Headers:", resp.Header)
-  body, _ := ioutil.ReadAll(resp.Body)
-  fmt.Println("*ANDROID POST* response: ", string(body))
-}
