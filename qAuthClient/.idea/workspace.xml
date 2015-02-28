@@ -26,9 +26,15 @@
       <file leaf-file-name="MainActivity.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/qauth/djd/qauthclient/MainActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-3.427896" vertical-offset="4410" max-vertical-offset="6090">
-              <caret line="51" column="13" selection-start-line="51" selection-start-column="13" selection-end-line="51" selection-end-column="13" />
-              <folding />
+            <state vertical-scroll-proportion="-3.4633758" vertical-offset="4410" max-vertical-offset="7740">
+              <caret line="63" column="13" selection-start-line="63" selection-start-column="13" selection-end-line="63" selection-end-column="13" />
+              <folding>
+                <element signature="e#5368#5490#0" expanded="true" />
+                <element signature="e#5479#5480#0" expanded="true" />
+                <element signature="e#14484#14485#0" expanded="true" />
+                <element signature="e#14530#14531#0" expanded="true" />
+                <element signature="e#14716#14732#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -714,6 +720,13 @@
       </map>
     </option>
   </component>
+  <component name="IdeDocumentHistory">
+    <option name="changedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/app/src/main/java/qauth/djd/qauthclient/MainActivity.java" />
+      </list>
+    </option>
+  </component>
   <component name="ProjectFrameBounds">
     <option name="y" value="23" />
     <option name="width" value="2560" />
@@ -1026,9 +1039,15 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/app/src/main/java/qauth/djd/qauthclient/MainActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-3.427896" vertical-offset="4410" max-vertical-offset="6090">
-          <caret line="51" column="13" selection-start-line="51" selection-start-column="13" selection-end-line="51" selection-end-column="13" />
-          <folding />
+        <state vertical-scroll-proportion="-3.4633758" vertical-offset="4410" max-vertical-offset="7740">
+          <caret line="63" column="13" selection-start-line="63" selection-start-column="13" selection-end-line="63" selection-end-column="13" />
+          <folding>
+            <element signature="e#5368#5490#0" expanded="true" />
+            <element signature="e#5479#5480#0" expanded="true" />
+            <element signature="e#14484#14485#0" expanded="true" />
+            <element signature="e#14530#14531#0" expanded="true" />
+            <element signature="e#14716#14732#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

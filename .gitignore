@@ -7,3 +7,7 @@
 *.swp
 qAuthServer/bin
 qAuthServer/pkg
+qAuthServer/src/9fans.net
+qAuthServer/src/github.com
+qAuthServer/src/golang.org
+
