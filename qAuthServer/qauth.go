@@ -81,7 +81,6 @@ type DbProv_t struct {
 
 func sendToken(token string, userId string) { //eventually support sending to multiple servers
   url := "http://107.170.156.222:8081/givetoken"
-  //fmt.Println("URL:>", url)
 
   var jsonStr = []byte(`{"token":"token007","userId":"1"}`)
   req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
@@ -93,7 +92,6 @@ func sendToken(token string, userId string) { //eventually support sending to mu
     panic(err)
   }
   defer resp.Body.Close()
-
 
   INFO(fmt.Sprintf("response Status:", resp.Status))
   INFO(fmt.Sprintf("response Headers:", resp.Header))
@@ -229,6 +227,7 @@ func init() {
     }
     writeOut, err := json.Marshal(list)
     if err != nil { panic(err) }
+    w.Header().Set("Content-Type", "application/json")
     w.Write(writeOut)
   }
 
