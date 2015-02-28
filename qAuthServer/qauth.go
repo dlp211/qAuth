@@ -10,6 +10,8 @@ import (
   "log"
   "os"
  // "crypto/rsa"
+  "crypto/rand"
+  "crypto/sha1"
 )
 
 /* logging functionality */
@@ -77,6 +79,7 @@ type publicKey_t struct {
 /* DB Structs */
 type DbEntry_t struct {
   password string
+  salt string
   deviceId []string
   bluetoothId []string
   pk publicKey_t
@@ -108,6 +111,22 @@ func sendToken(token string, userId string) { //eventually support sending to mu
 
   body, _ := ioutil.ReadAll(resp.Body)
   INFO(fmt.Sprintf("*ANDROID POST* response: ", string(body)))
+}
+
+func AUTHENTICATE(password, salt, hash string) bool {
+  hasher := sha1.New()
+  hasher.Write([]byte(password + salt))
+  return fmt.Sprintf("% x", hasher.Sum(nil)) == hash
+}
+
+func generateHash(password string) (string, string) {
+  b := make([]byte, 64)
+  _, err := rand.Read(b)
+  if err != nil { panic(err) }
+  salt := string(b)
+  hasher := sha1.New()
+  hasher.Write([]byte(password + salt))
+  return fmt.Sprintf("% x", hasher.Sum(nil)), salt
 }
 
 /* Rest handler map */
@@ -157,8 +176,10 @@ func init() {
       w.WriteHeader(http.StatusConflict)
     } else {
       //validate email
+      hashedPW, salt := generateHash(reg.Password)
       G_DB[reg.UserName] = DbEntry_t{
-        reg.Password,
+        hashedPW,
+        salt,
         []string{reg.DeviceId},
         []string{},
         publicKey_t{reg.PKN, reg.PKE},
@@ -175,7 +196,7 @@ func init() {
     err := json.NewDecoder(r.Body).Decode(&reg)
     if err != nil { panic( err ) }
     if val, ok := G_DB[reg.UserName]; ok {
-      if val.password != reg.Password {
+      if AUTHENTICATE(reg.Password, val.salt, val.password) {
         WARN("User " + reg.UserName + " failed to authenticate" )
         w.WriteHeader(http.StatusUnauthorized)
       } else {
