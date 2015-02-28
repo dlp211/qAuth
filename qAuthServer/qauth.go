@@ -111,20 +111,6 @@ var G_DB_PROVIDERS = map[string]DbProv_t{}
 
 func init() {
 
-  data, err := os.Open("User_DB.gob")
-  defer data.Close()
-  data2, err2 := os.Open("Provider_DB.gob")
-  defer data2.Close()
-  if err == nil {
-    dataDecoder := gob.NewDecoder(data)
-    err = dataDecoder.Decode(&G_DB)
-    if err != nil { panic(err) }
-  }
-  if err2 == nil {
-    dataDecoder := gob.NewDecoder(data2)
-    err = dataDecoder.Decode(&G_DB_PROVIDERS)
-    if err != nil { panic(err) }
-  }
 
   G_Rest["/gettoken"] =
   func (w http.ResponseWriter, r *http.Request) {
@@ -271,6 +257,24 @@ func init() {
     dataEncoder.Encode(G_DB)
     dataEncoder = gob.NewEncoder(data2)
     dataEncoder.Encode(G_DB_PROVIDERS)
+  }
+
+  G_Rest["/load"] =
+  func (w http.ResponseWriter, r *http.Request) {
+    data, err := os.Open("User_DB.gob")
+    defer data.Close()
+    data2, err2 := os.Open("Provider_DB.gob")
+    defer data2.Close()
+    if err == nil {
+      dataDecoder := gob.NewDecoder(data)
+      err = dataDecoder.Decode(&G_DB)
+      if err != nil { panic(err) }
+    }
+    if err2 == nil {
+      dataDecoder := gob.NewDecoder(data2)
+      err = dataDecoder.Decode(&G_DB_PROVIDERS)
+      if err != nil { panic(err) }
+    }
   }
 
 }
