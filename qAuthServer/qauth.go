@@ -6,7 +6,9 @@ import (
   "bytes"
   "io/ioutil"
   "encoding/json"
+  "encoding/gob"
   "log"
+  "os"
 )
 
 /* logging functionality */
@@ -108,6 +110,22 @@ var G_DB = map[string]DbEntry_t{}
 var G_DB_PROVIDERS = map[string]DbProv_t{}
 
 func init() {
+
+  data, err := os.Open("User_DB.gob")
+  defer data.Close()
+  data2, err2 := os.Open("Provider_DB.gob")
+  defer data2.Close()
+  if err == nil {
+    dataDecoder := gob.NewDecoder(data)
+    err = dataDecoder.Decode(&G_DB)
+    if err != nil { panic(err) }
+  }
+  if err2 == nil {
+    dataDecoder := gob.NewDecoder(data2)
+    err = dataDecoder.Decode(&G_DB_PROVIDERS)
+    if err != nil { panic(err) }
+  }
+
   G_Rest["/gettoken"] =
   func (w http.ResponseWriter, r *http.Request) {
     var wS watch_struct
@@ -150,7 +168,7 @@ func init() {
         []string{reg.DeviceId},
         []string{},
       }
-      INFO("User " + reg.UserName + " successfully reregister with deviceId: " + reg.DeviceId)
+      INFO("User " + reg.UserName + " successfully registered with deviceId: " + reg.DeviceId)
       w.WriteHeader(http.StatusAccepted)
     }
   }
@@ -166,7 +184,7 @@ func init() {
         WARN("User " + reg.UserName + " failed to authenticate" )
         w.WriteHeader(http.StatusUnauthorized)
       } else {
-        INFO("User " + reg.UserName + " registerer BluetoothId: " + reg.BluetoothId )
+        INFO("User " + reg.UserName + " registered BluetoothId: " + reg.BluetoothId )
         val.bluetoothId = append(val.bluetoothId, reg.BluetoothId)
         G_DB[reg.UserName] = val
         w.WriteHeader(http.StatusAccepted)
@@ -240,6 +258,21 @@ func init() {
   func (w http.ResponseWriter, r *http.Request) {
     fmt.Println()
   }
+
+  G_Rest["/save"] =
+  func (w http.ResponseWriter, r *http.Request) {
+    data, err := os.Create("User_DB.gob")
+    defer data.Close()
+    if err != nil { panic(err) }
+    data2, err2 := os.Create("Provider_DB.gob")
+    defer data2.Close()
+    if err2 != nil { panic(err2) }
+    dataEncoder := gob.NewEncoder(data)
+    dataEncoder.Encode(G_DB)
+    dataEncoder = gob.NewEncoder(data2)
+    dataEncoder.Encode(G_DB_PROVIDERS)
+  }
+
 }
 
 
