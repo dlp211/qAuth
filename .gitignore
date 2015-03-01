@@ -19,8 +19,8 @@ pkg/
 gen/
 
 #GOLANG files to ignore
-src/9fans.net/
-src/github.com/
-src/golang.org/
-src/generate_cert/
+9fans.net/
+github.com/
+golang.org/
+generate_cert/
 
