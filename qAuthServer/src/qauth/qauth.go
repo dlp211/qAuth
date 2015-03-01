@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
+	"crypto/x509"
 	"encoding/gob"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"logger"
@@ -334,25 +337,60 @@ func init() {
 		}
 }
 
+var G_PRIVKEY *rsa.PrivateKey
+
+func loadPrivKey() *rsa.PrivateKey {
+
+	file := os.Getenv("RSAKEY")
+
+	pemfile, err := os.Open(file)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// need to convert pemfile to []byte for decoding
+
+	pemfileinfo, _ := pemfile.Stat()
+	var size int64 = pemfileinfo.Size()
+	pembytes := make([]byte, size)
+
+	// read pemfile content into pembytes
+	buffer := bufio.NewReader(pemfile)
+	_, err = buffer.Read(pembytes)
+
+	// proper decoding now
+	data, _ := pem.Decode([]byte(pembytes))
+
+	pemfile.Close()
+	fmt.Printf("PEM Type :\n%s\n", data.Type)
+	fmt.Printf("PEM Headers :\n%s\n", data.Headers)
+	fmt.Printf("PEM Bytes :\n%x\n", string(data.Bytes))
+	privKey, err := x509.ParsePKCS1PrivateKey(data.Bytes)
+	if err != nil {
+		logger.PANIC("PRIVATE KEY FAILED TO LOAD")
+	}
+	return privKey
+}
+
 func main() {
 
 	fmt.Println("============================")
 	fmt.Println("|| Starting Q-Auth Server ||")
 	fmt.Println("============================")
 
-	fmt.Println("LOGGER TESTS")
+	fmt.Println("LOGGER TESTS\n==================")
 	logger.INFO("INFO")
 	logger.DEBUG("DEBUG")
 	logger.WARN("WARN")
 	logger.PANIC("PANIC")
 
-	privKey, err := rsa.GenerateKey(rand.Reader, 1024)
-	if err != nil {
-		panic(err)
-	}
+	privKey := loadPrivKey()
 	pubKey := privKey.Public()
-	fmt.Println()
-	fmt.Println(privKey, pubKey)
+
+	fmt.Println("PUBLIC KEY")
+	fmt.Println(pubKey)
 
 	for point, function := range G_Rest {
 		http.HandleFunc(point, function)
