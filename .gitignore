@@ -1,16 +1,26 @@
+#Android Studio files
 .gradle
 /local.properties
-qAuthClient/.idea/workspace.xml
-DummyClient/.idea/workspace.xml
+/.idea
 /.idea/libraries
 .DS_Store
-qAuthClient/build
-DummyClient/build
+/build
+
+#VIM files to ignore
 *.swp
-qAuthServer/bin
-qAuthServer/pkg
-qAuthServer/src/9fans.net
-qAuthServer/src/github.com
-qAuthServer/src/golang.org
-qAuthServer/src/generate_cert
+
+#ignore binaries
+*.apk
+*.ap_
+
+#ignore generated files
+/bin
+/pkg
+/gen
+
+#GOLANG files to ignore
+/src/9fans.net
+/src/github.com
+/src/golang.org
+/src/generate_cert
 
