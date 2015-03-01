@@ -1,9 +1,11 @@
 .gradle
 /local.properties
-/.idea/workspace.xml
+qAuthClient/.idea/workspace.xml
+DummyClient/.idea/workspace.xml
 /.idea/libraries
 .DS_Store
-/build
+qAuthClient/build
+DummyClient/build
 *.swp
 qAuthServer/bin
 qAuthServer/pkg
