@@ -1,10 +1,10 @@
 #Android Studio files
 .gradle
-/local.properties
-/.idea
-/.idea/libraries
-.DS_Store
-/build
+local.properties
+.idea/
+.idea/libraries/
+.DS_Store/
+build/
 
 #VIM files to ignore
 *.swp
@@ -14,13 +14,13 @@
 *.ap_
 
 #ignore generated files
-/bin
-/pkg
-/gen
+bin/
+pkg/
+gen/
 
 #GOLANG files to ignore
-/src/9fans.net
-/src/github.com
-/src/golang.org
-/src/generate_cert
+src/9fans.net
+src/github.com
+src/golang.org
+src/generate_cert
 
