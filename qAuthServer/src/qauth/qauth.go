@@ -2,6 +2,9 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha1"
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
@@ -9,9 +12,6 @@ import (
 	"logger"
 	"net/http"
 	"os"
-	// "crypto/rsa"
-	"crypto/rand"
-	"crypto/sha1"
 )
 
 /* STRUCTURES */
@@ -113,8 +113,8 @@ func generateHash(password string) (string, string) {
 var G_Rest = map[string]func(http.ResponseWriter, *http.Request){}
 
 /* Maps as our DB tables */
-var Users = map[string]DbEntry_t{}
-var Providers = map[string]DbProv_t{}
+var G_DB = map[string]DbEntry_t{}
+var G_DB_PROVIDERS = map[string]DbProv_t{}
 
 var AdminKey string
 
@@ -345,6 +345,14 @@ func main() {
 	logger.DEBUG("DEBUG")
 	logger.WARN("WARN")
 	logger.PANIC("PANIC")
+
+	privKey, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		panic(err)
+	}
+	pubKey := privKey.Public()
+	fmt.Println()
+	fmt.Println(privKey, pubKey)
 
 	for point, function := range G_Rest {
 		http.HandleFunc(point, function)

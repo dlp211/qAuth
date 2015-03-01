@@ -10,4 +10,5 @@ qAuthServer/pkg
 qAuthServer/src/9fans.net
 qAuthServer/src/github.com
 qAuthServer/src/golang.org
+qAuthServer/src/generate_cert
 
