@@ -48,6 +48,7 @@ func RegisterBluetoothID(w http.ResponseWriter, r *http.Request) {
 		} else {
 			logger.INFO("User " + reg.UserName + " registered BluetoothId: " + reg.BluetoothId)
 			val.BluetoothId = reg.BluetoothId
+			val.Pk = model.PublicKey{reg.PKN, reg.PKE}
 			if DB.UpdateUser(reg.UserName, &val) {
 				w.WriteHeader(http.StatusAccepted)
 			} else {
