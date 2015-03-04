@@ -209,7 +209,7 @@ func BuildControllerSet(db *db.Tables) {
 
 	//Controllers["/db/save"] = SaveDBsToFile
 	//Controllers["/db/load"] = LoadDBsFromFile
-	Controllers["db/show/users"] = DisplayUserDB
+	Controllers["/db/show/users"] = DisplayUserDB
 
 	DB = db
 }
