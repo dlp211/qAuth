@@ -49,5 +49,6 @@ func main() {
 		pem.Encode(pemfile, pemkey)
 		fmt.Println(pub) */
 
+	fmt.Println(authenticate.AdminKey)
 	http.ListenAndServe(":8080", nil)
 }
