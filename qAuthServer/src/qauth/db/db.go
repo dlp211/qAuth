@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"qauth/model"
 )
 
@@ -10,6 +11,10 @@ type user struct {
 	deviceId    []string
 	bluetoothId string
 	pk          model.PublicKey
+}
+
+func (u *user) String() string {
+	return fmt.Sprintf("%s", u.deviceId)
 }
 
 type provider struct {

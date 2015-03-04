@@ -11,6 +11,10 @@ type Registration struct {
 	DeviceId string `json:"deviceId"`
 }
 
+func (reg *Registration) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&reg)
+}
+
 type RegisterBT struct {
 	UserName    string `json:"email"`
 	Password    string `json:"password"`
@@ -38,8 +42,4 @@ type AdminDBAccess struct {
 type PublicKey struct {
 	N string
 	E int
-}
-
-func (reg *Registration) Decode(r io.Reader) error {
-	return json.NewDecoder(r).Decode(&reg)
 }
