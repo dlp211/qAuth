@@ -193,7 +193,7 @@ func LoadDBsFromFile(w http.ResponseWriter, r *http.Request) {
 func DisplayUserDB(w http.ResponseWriter, r *http.Request) {
 	//Do Admin Authentication
 	for key, value := range DB.Users {
-		fmt.Println(key, value)
+		fmt.Println(key, value.String())
 	}
 }
 
