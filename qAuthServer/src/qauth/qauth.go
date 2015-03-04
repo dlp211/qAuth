@@ -16,7 +16,7 @@ var DB *db.Tables
 
 func init() {
 	adminKey = "AAAA" /* This will be changed to pull from an ENV variable */
-	privKey = authenticate.LoadPrivKey("RSAKey")
+	privKey = authenticate.LoadPrivKey("RSAKEY")
 
 	DB = db.Init()
 	controller.BuildControllerSet(DB)
