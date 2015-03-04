@@ -195,13 +195,23 @@ func LoadDBsFromFile(w http.ResponseWriter, r *http.Request) {
 */
 
 func DisplayUserDB(w http.ResponseWriter, r *http.Request) {
-	//Do Admin Authentication
-	for key, value := range DB.Users {
-		fmt.Println(key, value.String())
+	logger.INFO("/db/show/users")
+	var admin model.AdminDBAccess
+	err := admin.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	if authenticate.AdminAuth(admin.Key) {
+		for key, value := range DB.Users {
+			fmt.Println(key, value.String())
+		}
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
 
-func BuildControllerSet(db *db.Tables) {
+func BuildControllerSet() {
 	Controllers["/register"] = Register
 	//Controllers["/register/bluetooth"] = RegisterBluetoothID
 	//Controllers["/register/device"] = AddDevice
@@ -214,8 +224,6 @@ func BuildControllerSet(db *db.Tables) {
 	//Controllers["/db/save"] = SaveDBsToFile
 	//Controllers["/db/load"] = LoadDBsFromFile
 	Controllers["/db/show/users"] = DisplayUserDB
-
-	DB = db
 }
 
 /*

@@ -12,6 +12,13 @@ import (
 	"os"
 )
 
+var AdminKey string
+var PrivKey *rsa.PrivateKey
+
+func AdminAuth(key string) bool {
+	return AdminKey == key
+}
+
 func Password(password, salt, hash string) bool {
 	hasher := sha1.New()
 	hasher.Write([]byte(password + salt))
@@ -28,6 +35,10 @@ func NewPWHash(password string) (string, string) {
 	hasher := sha1.New()
 	hasher.Write([]byte(password + salt))
 	return fmt.Sprintf("% x", hasher.Sum(nil)), salt
+}
+
+func LoadAdminKey(env string) string {
+	return os.Getenv(env)
 }
 
 func LoadPrivKey(env string) *rsa.PrivateKey {

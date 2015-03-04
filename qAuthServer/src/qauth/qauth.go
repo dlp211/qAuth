@@ -1,25 +1,24 @@
 package main
 
 import (
-	"crypto/rsa"
+	//"crypto/rsa"
+	//"crypto/x509"
+	//"encoding/pem"
 	"fmt"
 	"logger"
 	"net/http"
+	//"os"
 	"qauth/authenticate"
 	"qauth/controller"
 	"qauth/db"
 )
 
-var adminKey string
-var privKey *rsa.PrivateKey
-var DB *db.Tables
-
 func init() {
-	adminKey = "AAAA" /* This will be changed to pull from an ENV variable */
-	privKey = authenticate.LoadPrivKey("RSAKEY")
+	authenticate.AdminKey = authenticate.LoadAdminKey("ADMINKEY")
+	authenticate.PrivKey = authenticate.LoadPrivKey("RSAKEY")
 
-	DB = db.Init()
-	controller.BuildControllerSet(DB)
+	controller.DB = db.Init()
+	controller.BuildControllerSet()
 
 	for endpoint, function := range controller.Controllers {
 		http.HandleFunc(endpoint, function)
@@ -38,10 +37,17 @@ func main() {
 	logger.WARN("WARN")
 	logger.PANIC("PANIC")
 
-	pubKey := privKey.Public()
+	pubKey := authenticate.PrivKey.Public()
 
 	fmt.Println("PUBLIC KEY")
 	fmt.Println(pubKey)
+
+	/*
+		pemfile, _ := os.Create("pub.key")
+		pub, _ := x509.MarshalPKIXPublicKey(pubKey)
+		var pemkey = &pem.Block{Type: "RSA PUBLIC KEY", Bytes: pub}
+		pem.Encode(pemfile, pemkey)
+		fmt.Println(pub) */
 
 	http.ListenAndServe(":8080", nil)
 }

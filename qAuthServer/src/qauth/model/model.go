@@ -43,6 +43,10 @@ type AdminDBAccess struct {
 	Key  string `json:"key"`
 }
 
+func (admin *AdminDBAccess) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(admin)
+}
+
 type PublicKey struct {
 	N string
 	E int
