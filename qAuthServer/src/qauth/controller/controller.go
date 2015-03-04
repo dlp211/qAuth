@@ -207,6 +207,7 @@ func DisplayUserDB(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 	} else {
+		logger.WARN("ATTEMPT TO DUMP DB DENIED")
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
