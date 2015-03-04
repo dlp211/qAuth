@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"logger"
 	"net/http"
 	"qauth/authenticate"
@@ -189,6 +190,13 @@ func LoadDBsFromFile(w http.ResponseWriter, r *http.Request) {
 }
 */
 
+func DisplayUserDB(w http.ResponseWriter, r *http.Request) {
+	//Do Admin Authentication
+	for key, value := range DB.Users {
+		fmt.Println(key, value)
+	}
+}
+
 func BuildControllerSet(db *db.Tables) {
 	Controllers["/register"] = Register
 	//Controllers["/register/bluetooth"] = RegisterBluetoothID
@@ -201,6 +209,7 @@ func BuildControllerSet(db *db.Tables) {
 
 	//Controllers["/db/save"] = SaveDBsToFile
 	//Controllers["/db/load"] = LoadDBsFromFile
+	Controllers["db/show/users"] = DisplayUserDB
 
 	DB = db
 }
