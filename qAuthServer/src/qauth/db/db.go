@@ -5,7 +5,7 @@ import (
 	"qauth/model"
 )
 
-type user struct {
+type User struct {
 	password    string
 	salt        string
 	deviceId    []string
@@ -13,30 +13,30 @@ type user struct {
 	pk          model.PublicKey
 }
 
-func (u *user) String() string {
+func (u *User) String() string {
 	return fmt.Sprintf("%s", u.deviceId)
 }
 
-type provider struct {
+type Provider struct {
 	key         string
 	packageName string
 	callback    string
 }
 
 type Tables struct {
-	Users     map[string]user
-	Providers map[string]provider
+	Users     map[string]User
+	Providers map[string]Provider
 }
 
 func Init() *Tables {
 	var DB Tables
-	DB.Users = map[string]user{}
-	DB.Providers = map[string]provider{}
+	DB.Users = map[string]User{}
+	DB.Providers = map[string]Provider{}
 	return &DB
 }
 
 func (DB *Tables) CreateUser(reg *model.Registration, hashedPW string, salt string) {
-	DB.Users[reg.UserName] = user{
+	DB.Users[reg.UserName] = User{
 		hashedPW,
 		salt,
 		[]string{reg.DeviceId},
