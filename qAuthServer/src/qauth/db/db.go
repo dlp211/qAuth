@@ -6,15 +6,15 @@ import (
 )
 
 type User struct {
-	password    string
-	salt        string
-	deviceId    []string
-	bluetoothId string
-	pk          model.PublicKey
+	Password    string
+	Salt        string
+	DeviceId    []string
+	BluetoothId string
+	Pk          model.PublicKey
 }
 
 func (u *User) String() string {
-	return fmt.Sprintf("%s %v", u.deviceId, u.pk)
+	return fmt.Sprintf("%s %v", u.DeviceId, u.Pk)
 }
 
 type Provider struct {
@@ -43,6 +43,19 @@ func (DB *Tables) CreateUser(reg *model.Registration, hashedPW string, salt stri
 		"",
 		model.PublicKey{"", 0},
 	}
+}
+
+func (DB *Tables) UpdateUser(name string, user *User) bool {
+	if val, ok := DB.Users[name]; ok {
+		val.Password = user.Password
+		val.Salt = user.Salt
+		val.DeviceId = user.DeviceId
+		val.BluetoothId = user.BluetoothId
+		val.Pk = user.Pk
+		DB.Users[name] = val
+		return true
+	}
+	return false
 }
 
 func (table *Tables) save(file string) {

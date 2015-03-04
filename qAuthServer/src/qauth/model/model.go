@@ -23,6 +23,10 @@ type RegisterBT struct {
 	PKE         int    `json:"publicKey_e"`
 }
 
+func (reg *RegisterBT) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&reg)
+}
+
 type RegisterProvider struct {
 	Provider string `json:"provider"`
 	Key      string `json:"key"`

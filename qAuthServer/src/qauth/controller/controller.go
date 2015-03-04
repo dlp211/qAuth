@@ -33,23 +33,26 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
 func RegisterBluetoothID(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/register/bluetooth")
-	var reg registerBT_t
-	err := json.NewDecoder(r.Body).Decode(&reg)
+	var reg model.RegisterBT
+	err := reg.Decode(r.Body)
 	if err != nil {
 		panic(err)
 	}
-	if val, ok := G_DB[reg.UserName]; ok {
-		if AUTHENTICATE(reg.Password, val.salt, val.password) {
+
+	if val, ok := DB.Users[reg.UserName]; ok {
+		if authenticate.Password(reg.Password, val.Salt, val.Password) {
 			logger.WARN("User " + reg.UserName + " failed to authenticate")
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 			logger.INFO("User " + reg.UserName + " registered BluetoothId: " + reg.BluetoothId)
-			val.bluetoothId = append(val.bluetoothId, reg.BluetoothId)
-			G_DB[reg.UserName] = val
-			w.WriteHeader(http.StatusAccepted)
+			val.BluetoothId = reg.BluetoothId
+			if DB.UpdateUser(reg.UserName, &val) {
+				w.WriteHeader(http.StatusAccepted)
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
 	} else {
 		logger.INFO("User " + reg.UserName + " not found")
