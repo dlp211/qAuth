@@ -14,7 +14,7 @@ type User struct {
 }
 
 func (u *User) String() string {
-	return fmt.Sprintf("%s", u.deviceId)
+	return fmt.Sprintf("%s %v", u.deviceId, u.pk)
 }
 
 type Provider struct {
