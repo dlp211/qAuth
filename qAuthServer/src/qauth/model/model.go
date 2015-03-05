@@ -5,6 +5,14 @@ import (
 	"io"
 )
 
+type TestPayload struct {
+	Payload string `json:payload`
+}
+
+func (reg *TestPayload) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&reg)
+}
+
 type AddPackage struct {
 	Package          string `json:package`
 	UserName         string `json:email`

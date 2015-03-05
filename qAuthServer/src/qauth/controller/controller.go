@@ -140,7 +140,7 @@ func AddUserToProvider(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func DeleteProviderFromUser(w http.ResponseWriter, r *http.Request) {
+func DeleteUserFromProvider(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/provider/deactivate")
 	var activate model.AddPackage
 	err := activate.Decode(r.Body)
@@ -225,6 +225,18 @@ func DisplayProviderDB(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func TestRSA(w http.ResponseWriter, r *http.Request) {
+	logger.INFO("/db/show/providers")
+	var payload model.TestPayload
+	err := payload.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	str := authenticate.Decrypt(payload.Payload)
+	fmt.Println(str)
+	w.WriteHeader(http.StatusOK)
+}
+
 func BuildControllerSet() {
 	Controllers["/register"] = Register
 	Controllers["/register/bluetooth"] = RegisterBluetoothID
@@ -232,13 +244,15 @@ func BuildControllerSet() {
 
 	Controllers["/provider"] = AddProvider
 	Controllers["/provider/available"] = GetAllAvailablePackages
-	//Controllers["/provider/activate"] = AddProviderToUser
-	//Controllers["/provider/deactivate"] = DeleteProviderFromUser
+	Controllers["/provider/activate"] = AddUserToProvider
+	Controllers["/provider/deactivate"] = DeleteUserFromProvider
 
 	Controllers["/db/save"] = SaveDBsToFile
 	Controllers["/db/load"] = LoadDBsFromFile
 	Controllers["/db/show/users"] = DisplayUserDB
 	Controllers["/db/show/providers"] = DisplayProviderDB
+
+	Controllers["/test"] = TestRSA
 }
 
 /*
