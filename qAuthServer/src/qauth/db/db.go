@@ -65,13 +65,16 @@ func (DB *Tables) CreateProvider(prov *model.RegisterProvider) {
 }
 
 func (DB *Tables) UpdateUser(name string, user *User) bool {
-	if val, ok := DB.Users[name]; ok {
-		val.Password = user.Password
-		val.Salt = user.Salt
-		val.DeviceId = user.DeviceId
-		val.BluetoothId = user.BluetoothId
-		val.Pk = user.Pk
-		DB.Users[name] = val
+	if _, ok := DB.Users[name]; ok {
+		DB.Users[name] = *user
+		return true
+	}
+	return false
+}
+
+func (DB *Tables) UpdateProvider(pkg string, prov *Provider) bool {
+	if _, ok := DB.Providers[pkg]; ok {
+		DB.Providers[pkg] = *prov
 		return true
 	}
 	return false

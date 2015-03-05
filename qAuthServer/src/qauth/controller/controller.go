@@ -119,8 +119,25 @@ func GetAllAvailablePackages(w http.ResponseWriter, r *http.Request) {
 	w.Write(writeOut)
 }
 
-func AddProviderToUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println()
+func AddUserToProvider(w http.ResponseWriter, r *http.Request) {
+	logger.INFO("/provider/activate")
+	var activate model.AddPackage
+	err := activate.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	if val, ok := DB.Providers[activate.Package]; ok {
+		logger.INFO("User " + activate.UserName + " activated Package: " + activate.Package)
+		val.Users[activate.ProviderUserName] = activate.UserName
+		if DB.UpdateProvider(activate.Package, &val) {
+			w.WriteHeader(http.StatusAccepted)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	} else {
+		logger.INFO("Package " + activate.Package + " not found")
+		w.WriteHeader(http.StatusConflict)
+	}
 }
 
 /*

@@ -5,6 +5,16 @@ import (
 	"io"
 )
 
+type AddPackage struct {
+	Package          string `json:package`
+	UserName         string `json:email`
+	ProviderUserName string `json:username`
+}
+
+func (reg *AddPackage) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&reg)
+}
+
 type Registration struct {
 	UserName string `json:"email"`
 	Password string `json:"password"`
