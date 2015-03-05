@@ -63,6 +63,7 @@ func RegisterBluetoothID(w http.ResponseWriter, r *http.Request) {
 }
 
 /* USER UPDATE CONTROLLERS */ /*
+//THIS REQUIRES THAT WE CAN ENCRYPT AND DECRYPT
 func AddDevice(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/register/device")
 	var reg registration_t
@@ -198,7 +199,7 @@ func DisplayProviderDB(w http.ResponseWriter, r *http.Request) {
 
 func BuildControllerSet() {
 	Controllers["/register"] = Register
-	//Controllers["/register/bluetooth"] = RegisterBluetoothID
+	Controllers["/register/bluetooth"] = RegisterBluetoothID
 	//Controllers["/register/device"] = AddDevice
 
 	Controllers["/provider"] = AddProvider
