@@ -200,7 +200,7 @@ func BuildControllerSet() {
 	//Controllers["/register/bluetooth"] = RegisterBluetoothID
 	//Controllers["/register/device"] = AddDevice
 
-	//Controllers["/provider"] = AddProvider
+	Controllers["/provider"] = AddProvider
 	//Controllers["/provider/available"] = GetAllAvailablePackages
 	//Controllers["/provider/activate"] = AddProviderToUser
 	//Controllers["/provider/deactivate"] = DeleteProviderFromUser
