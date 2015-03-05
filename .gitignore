@@ -9,6 +9,9 @@ build/
 #VIM files to ignore
 *.swp
 
+#ignore gobs
+*.gob
+
 #ignore binaries
 *.apk
 *.ap_
