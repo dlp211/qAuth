@@ -21,13 +21,13 @@ func (u *User) String() string {
 }
 
 type Provider struct {
-	key         string
-	packageName string
-	callback    string
+	Key         string
+	PackageName string
+	Callback    string
 }
 
 func (p *Provider) String() string {
-	return fmt.Sprintf("KEY: %s\tPACKAGE: %s\tCALLBACK_URL: %s", p.key, p.packageName, p.callback)
+	return fmt.Sprintf("KEY: %s\tPACKAGE: %s\tCALLBACK_URL: %s", p.Key, p.PackageName, p.Callback)
 }
 
 type Tables struct {
@@ -76,20 +76,20 @@ func (DB *Tables) UpdateUser(name string, user *User) bool {
 func (DB *Tables) Save(file string) {
 	logger.INFO("Invoking save on the DB")
 	data, err := os.Create(file + ".gob")
+	defer data.Close()
 	if err != nil {
 		panic(err)
 	}
 	dataEncoder := gob.NewEncoder(data)
 	dataEncoder.Encode(DB.Users)
-	data.Close()
 
 	data2, err2 := os.Create(file + "2.gob")
 	defer data2.Close()
 	if err2 != nil {
 		panic(err2)
 	}
-	dataEncoder2 := gob.NewEncoder(data2)
-	dataEncoder2.Encode(DB.Providers)
+	dataEncoder = gob.NewEncoder(data2)
+	dataEncoder.Encode(DB.Providers)
 	logger.INFO("Save complete")
 }
 
