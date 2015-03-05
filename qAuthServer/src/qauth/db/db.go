@@ -21,13 +21,15 @@ func (u *User) String() string {
 }
 
 type Provider struct {
-	Key         string
-	PackageName string
-	Callback    string
+	Key          string
+	ProviderName string
+	Callback     string
+	Users        map[string]string
+	Pk           model.PublicKey
 }
 
 func (p *Provider) String() string {
-	return fmt.Sprintf("KEY: %s\tPACKAGE: %s\tCALLBACK_URL: %s", p.Key, p.PackageName, p.Callback)
+	return fmt.Sprintf("KEY: %s\tPACKAGE: %s\tCALLBACK_URL: %s", p.Key, p.ProviderName, p.Callback)
 }
 
 type Tables struct {
@@ -53,10 +55,12 @@ func (DB *Tables) CreateUser(reg *model.Registration, hashedPW string, salt stri
 }
 
 func (DB *Tables) CreateProvider(prov *model.RegisterProvider) {
-	DB.Providers[prov.Provider] = Provider{
+	DB.Providers[prov.Package] = Provider{
 		prov.Key,
-		prov.Package,
+		prov.Provider,
 		prov.Callback,
+		make(map[string]string),
+		model.PublicKey{"", 0},
 	}
 }
 

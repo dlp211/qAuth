@@ -108,8 +108,8 @@ func AddProvider(w http.ResponseWriter, r *http.Request) {
 func GetAllAvailablePackages(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/provider/available")
 	var packages model.PackageList
-	for _, v := range DB.Providers {
-		packages.Packages = append(packages.Packages, v.PackageName)
+	for k, _ := range DB.Providers {
+		packages.Packages = append(packages.Packages, k)
 	}
 	writeOut, err := json.Marshal(packages)
 	if err != nil {
@@ -119,11 +119,11 @@ func GetAllAvailablePackages(w http.ResponseWriter, r *http.Request) {
 	w.Write(writeOut)
 }
 
-/*
 func AddProviderToUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println()
 }
 
+/*
 func DeleteProviderFromUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println()
 }*/
