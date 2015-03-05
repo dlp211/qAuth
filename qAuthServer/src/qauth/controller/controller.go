@@ -154,7 +154,6 @@ func DeleteProviderFromUser(w http.ResponseWriter, r *http.Request) {
 		logger.INFO("Package " + activate.Package + " not found")
 		w.WriteHeader(http.StatusConflict)
 	}
-
 }
 
 /* ADMIN CONTROLLERS */
