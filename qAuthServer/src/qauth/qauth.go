@@ -31,5 +31,8 @@ func main() {
 	fmt.Println("PUBLIC KEY\n==================================")
 	fmt.Println(pubKey)
 
-	http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		panic(err)
+	}
 }
