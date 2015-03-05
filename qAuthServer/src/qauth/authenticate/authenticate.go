@@ -21,8 +21,7 @@ func AdminAuth(key string) bool {
 
 func Decrypt(payload string) string {
 	bytes := []byte(payload)
-	label := []byte("")
-	msg, err := rsa.DecryptOAEP(sha1.New(), nil, PrivKey, bytes, label)
+	msg, err := rsa.DecryptOAEP(sha1.New(), nil, PrivKey, bytes, nil)
 	if err != nil {
 		logger.WARN("Decryption failed")
 		panic(err)
