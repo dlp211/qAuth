@@ -6,7 +6,9 @@ import (
 )
 
 type TestPayload struct {
-	Payload string `json:payload`
+	Payload  string `json:payload`
+	Modulus  string `json:modulus`
+	Exponent string `json:exponent`
 }
 
 func (reg *TestPayload) Decode(r io.Reader) error {
