@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"logger"
@@ -20,7 +21,7 @@ func AdminAuth(key string) bool {
 }
 
 func Decrypt(payload string) string {
-	bytes := []byte(payload)
+	bytes, _ := hex.DecodeString(payload)
 	for _, b := range bytes {
 		fmt.Printf("%x ", b)
 	}
