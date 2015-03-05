@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"logger"
 	"net/http"
@@ -25,7 +26,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		logger.WARN("User " + reg.UserName + " attempted to reregister")
 		w.WriteHeader(http.StatusConflict)
 	} else {
-		//validate email
+		//TODO validate email if we go live
 		hashedPW, salt := authenticate.NewPWHash(reg.Password)
 		DB.CreateUser(&reg, hashedPW, salt)
 		logger.INFO("User " + reg.UserName + " successfully registered with deviceId: " + reg.DeviceId)
@@ -102,15 +103,14 @@ func AddProvider(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
-/* MANAGE PACKAGE SET CONTROLLERS */ /*
+/* MANAGE PACKAGE SET CONTROLLERS */
 func GetAllAvailablePackages(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/provider/available")
-	var list providerList_t
-	for _, v := range G_DB_PROVIDERS {
-		list.Packages = append(list.Packages, v.packageName)
+	var packages model.PackageList
+	for _, v := range DB.Providers {
+		packages.Packages = append(packages.Packages, v.PackageName)
 	}
-	writeOut, err := json.Marshal(list)
+	writeOut, err := json.Marshal(packages)
 	if err != nil {
 		panic(err)
 	}
@@ -118,13 +118,14 @@ func GetAllAvailablePackages(w http.ResponseWriter, r *http.Request) {
 	w.Write(writeOut)
 }
 
+/*
 func AddProviderToUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println()
 }
 
 func DeleteProviderFromUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println()
-}
+}*/
 
 /* ADMIN CONTROLLERS */
 func SaveDBsToFile(w http.ResponseWriter, r *http.Request) {
@@ -212,8 +213,6 @@ func BuildControllerSet() {
 }
 
 /*
-
-
 func sendToken(token string, userId string) { //eventually support sending to multiple servers
 	url := "http://107.170.156.222:8081/givetoken"
 
