@@ -202,7 +202,7 @@ func BuildControllerSet() {
 	//Controllers["/register/device"] = AddDevice
 
 	Controllers["/provider"] = AddProvider
-	//Controllers["/provider/available"] = GetAllAvailablePackages
+	Controllers["/provider/available"] = GetAllAvailablePackages
 	//Controllers["/provider/activate"] = AddProviderToUser
 	//Controllers["/provider/deactivate"] = DeleteProviderFromUser
 
