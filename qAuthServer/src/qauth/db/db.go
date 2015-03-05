@@ -81,21 +81,26 @@ func (DB *Tables) Save(file string) {
 }
 
 func (DB *Tables) Load(file string) {
+	logger.INFO("Attempting Load From DB")
 	data, err := os.Open(file + ".gob")
 	defer data.Close()
 	data2, err2 := os.Open(file + "2.gob")
 	defer data2.Close()
 	if err == nil {
+		logger.DEBUG("File data opened successfully")
 		dataDecoder := gob.NewDecoder(data)
 		err = dataDecoder.Decode(&DB.Users)
 		if err != nil {
+			logger.PANIC("Error decoding the Users table")
 			panic(err)
 		}
 	}
 	if err2 == nil {
+		logger.DEBUG("File data2 opened successfully")
 		dataDecoder := gob.NewDecoder(data2)
 		err = dataDecoder.Decode(&DB.Providers)
 		if err != nil {
+			logger.PANIC("Error decoding the Providers table")
 			panic(err)
 		}
 	}
