@@ -88,7 +88,10 @@ func (DB *Tables) Save(file string) {
 	dataEncoder := gob.NewEncoder(data)
 	dataEncoder.Encode(DB.Users)
 	dataEncoder2 := gob.NewEncoder(data2)
-	dataEncoder2.Encode(DB.Providers)
+	err := dataEncoder2.Encode(DB.Providers)
+	if err != nil {
+		logger.WARN(err)
+	}
 	logger.INFO("Save complete")
 }
 
