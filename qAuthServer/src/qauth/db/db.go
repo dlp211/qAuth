@@ -76,17 +76,18 @@ func (DB *Tables) UpdateUser(name string, user *User) bool {
 func (DB *Tables) Save(file string) {
 	logger.INFO("Invoking save on the DB")
 	data, err := os.Create(file + ".gob")
-	defer data.Close()
 	if err != nil {
 		panic(err)
 	}
+	dataEncoder := gob.NewEncoder(data)
+	dataEncoder.Encode(DB.Users)
+	data.Close()
+
 	data2, err2 := os.Create(file + "2.gob")
 	defer data2.Close()
 	if err2 != nil {
 		panic(err2)
 	}
-	dataEncoder := gob.NewEncoder(data)
-	dataEncoder.Encode(DB.Users)
 	dataEncoder2 := gob.NewEncoder(data2)
 	err := dataEncoder2.Encode(DB.Providers)
 	if err != nil {
