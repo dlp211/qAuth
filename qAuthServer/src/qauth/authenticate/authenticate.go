@@ -49,23 +49,15 @@ func LoadPrivKey(env string) *rsa.PrivateKey {
 		panic(err)
 	}
 
-	// need to convert pemfile to []byte for decoding
 	pemfileinfo, _ := pemfile.Stat()
+	defer pemfile.Close()
 	var size int64 = pemfileinfo.Size()
 	pembytes := make([]byte, size)
 
-	// read pemfile content into pembytes
 	buffer := bufio.NewReader(pemfile)
 	_, err = buffer.Read(pembytes)
 
-	// proper decoding now
 	data, _ := pem.Decode([]byte(pembytes))
-
-	pemfile.Close()
-
-	fmt.Printf("PEM Type : %s\n", data.Type)
-	fmt.Printf("PEM Headers : %s\n", data.Headers)
-	fmt.Printf("PEM Bytes : %x\n", string(data.Bytes))
 
 	privKey, err := x509.ParsePKCS1PrivateKey(data.Bytes)
 	if err != nil {
