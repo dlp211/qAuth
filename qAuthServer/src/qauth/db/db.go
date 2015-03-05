@@ -1,7 +1,10 @@
 package db
 
 import (
+	"encoding/gob"
 	"fmt"
+	"logger"
+	"os"
 	"qauth/model"
 )
 
@@ -58,8 +61,42 @@ func (DB *Tables) UpdateUser(name string, user *User) bool {
 	return false
 }
 
-func (table *Tables) save(file string) {
+func (DB *Tables) Save(file string) {
+	logger.INFO("Invoking save on the DB")
+	data, err := os.Create(file + ".gob")
+	defer data.Close()
+	if err != nil {
+		panic(err)
+	}
+	data2, err2 := os.Create(file + "2.gob")
+	defer data2.Close()
+	if err2 != nil {
+		panic(err2)
+	}
+	dataEncoder := gob.NewEncoder(data)
+	dataEncoder.Encode(DB.Users)
+	dataEncoder = gob.NewEncoder(data2)
+	dataEncoder.Encode(DB.Providers)
+	logger.INFO("Save complete")
 }
 
-func (table *Tables) load(file string) {
+func (DB *Tables) Load(file string) {
+	data, err := os.Open(file + ".gob")
+	defer data.Close()
+	data2, err2 := os.Open(file + "2.gob")
+	defer data2.Close()
+	if err == nil {
+		dataDecoder := gob.NewDecoder(data)
+		err = dataDecoder.Decode(&DB.Users)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if err2 == nil {
+		dataDecoder := gob.NewDecoder(data2)
+		err = dataDecoder.Decode(&DB.Providers)
+		if err != nil {
+			panic(err)
+		}
+	}
 }

@@ -129,70 +129,38 @@ func DeleteProviderFromUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println()
 }
 
-/* ADMIN CONTROLLERS */ /*
+/* ADMIN CONTROLLERS */
 func SaveDBsToFile(w http.ResponseWriter, r *http.Request) {
-	logger.INFO("/save")
-	var acc dbAccess_t
-	err := json.NewDecoder(r.Body).Decode(&acc)
+	logger.INFO("/db/save")
+	var admin model.AdminDBAccess
+	err := admin.Decode(r.Body)
 	if err != nil {
 		panic(err)
 	}
-	if acc.Key == AdminKey {
-		logger.INFO("Invoking save on the DB's")
-		data, err := os.Create(acc.File + ".gob")
-		defer data.Close()
-		if err != nil {
-			panic(err)
-		}
-		data2, err2 := os.Create(acc.File + "2.gob")
-		defer data2.Close()
-		if err2 != nil {
-			panic(err2)
-		}
-		dataEncoder := gob.NewEncoder(data)
-		dataEncoder.Encode(G_DB)
-		dataEncoder = gob.NewEncoder(data2)
-		dataEncoder.Encode(G_DB_PROVIDERS)
-		logger.INFO("Save complete")
+	if authenticate.AdminAuth(admin.Key) {
+		DB.Save(admin.File)
 		w.WriteHeader(http.StatusOK)
 	} else {
-		logger.WARN("Unauthorized attempt to save DB's with key: " + acc.Key)
+		logger.WARN("Unauthorized attempt to save DB's with key: " + admin.Key)
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
 
 func LoadDBsFromFile(w http.ResponseWriter, r *http.Request) {
-	logger.INFO("/load")
-	var acc dbAccess_t
-	err := json.NewDecoder(r.Body).Decode(&acc)
+	logger.INFO("/db/load")
+	var admin model.AdminDBAccess
+	err := admin.Decode(r.Body)
 	if err != nil {
 		panic(err)
 	}
-	if acc.Key == AdminKey {
-		data, err := os.Open(acc.File + ".gob")
-		defer data.Close()
-		data2, err2 := os.Open(acc.File + "2.gob")
-		defer data2.Close()
-		if err == nil {
-			dataDecoder := gob.NewDecoder(data)
-			err = dataDecoder.Decode(&G_DB)
-			if err != nil {
-				panic(err)
-			}
-		}
-		if err2 == nil {
-			dataDecoder := gob.NewDecoder(data2)
-			err = dataDecoder.Decode(&G_DB_PROVIDERS)
-			if err != nil {
-				panic(err)
-			}
-		}
+	if authenticate.AdminAuth(admin.Key) {
+		DB.Load(admin.File)
+		w.WriteHeader(http.StatusOK)
 	} else {
-		logger.WARN("Unauthorized attempt to save DB's with key: " + acc.Key)
+		logger.WARN("Unauthorized attempt to save DB's with key: " + admin.Key)
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
-*/
 
 func DisplayUserDB(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/db/show/users")
@@ -222,8 +190,8 @@ func BuildControllerSet() {
 	//Controllers["/provider/activate"] = AddProviderToUser
 	//Controllers["/provider/deactivate"] = DeleteProviderFromUser
 
-	//Controllers["/db/save"] = SaveDBsToFile
-	//Controllers["/db/load"] = LoadDBsFromFile
+	Controllers["/db/save"] = SaveDBsToFile
+	Controllers["/db/load"] = LoadDBsFromFile
 	Controllers["/db/show/users"] = DisplayUserDB
 }
 
