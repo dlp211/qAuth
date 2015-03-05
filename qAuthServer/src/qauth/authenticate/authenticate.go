@@ -23,6 +23,7 @@ func Decrypt(payload string) string {
 	msg, err := rsa.DecryptOAEP(sha1.New(), rand.Reader, PrivKey, []byte(payload), []byte(""))
 	if err != nil {
 		logger.WARN("Decryption failed")
+		logger.DEBUG("STRING: " + string(msg))
 		panic(err)
 	}
 	return string(msg)
