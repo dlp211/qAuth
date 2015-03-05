@@ -140,10 +140,22 @@ func AddUserToProvider(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
 func DeleteProviderFromUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println()
-}*/
+	logger.INFO("/provider/deactivate")
+	var activate model.AddPackage
+	err := activate.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	if val, ok := DB.Providers[activate.Package]; ok {
+		logger.INFO("User " + activate.UserName + " deactivated Package: " + activate.Package)
+		delete(val.Users, activate.ProviderUserName)
+	} else {
+		logger.INFO("Package " + activate.Package + " not found")
+		w.WriteHeader(http.StatusConflict)
+	}
+
+}
 
 /* ADMIN CONTROLLERS */
 func SaveDBsToFile(w http.ResponseWriter, r *http.Request) {
