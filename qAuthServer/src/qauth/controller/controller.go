@@ -226,7 +226,7 @@ func DisplayProviderDB(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestRSA(w http.ResponseWriter, r *http.Request) {
-	logger.INFO("/db/show/providers")
+	logger.INFO("/test")
 	var payload model.TestPayload
 	err := payload.Decode(r.Body)
 	if err != nil {
