@@ -85,27 +85,24 @@ func AddDevice(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* PROVIDER REGISTRATION CONTROLLERS */ /*
+/* PROVIDER REGISTRATION CONTROLLERS */
 func AddProvider(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/provider")
-	var prov provider_t
-	err := json.NewDecoder(r.Body).Decode(&prov)
+	var provider model.RegisterProvider
+	err := provider.Decode(r.Body)
 	if err != nil {
 		panic(err)
 	}
-	if _, ok := G_DB[prov.Provider]; ok {
-		logger.WARN("Provider " + prov.Provider + " attempted to reregister")
+	if _, ok := DB.Providers[provider.Provider]; ok {
+		logger.WARN("Provider " + provider.Provider + " attempted to reregister")
 		w.WriteHeader(http.StatusConflict)
 	} else {
-		G_DB_PROVIDERS[prov.Provider] = DbProv_t{
-			prov.Key,
-			prov.Package,
-			prov.Callback,
-		}
-		logger.INFO("Provider " + prov.Provider + " successfully registered with Key: " + prov.Key)
+		DB.CreateProvider(&provider)
+		logger.INFO("Provider " + provider.Provider + " successfully registered with Key: " + provider.Key)
 	}
 }
 
+/*
 /* MANAGE PACKAGE SET CONTROLLERS */ /*
 func GetAllAvailablePackages(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/provider/available")

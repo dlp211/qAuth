@@ -48,6 +48,14 @@ func (DB *Tables) CreateUser(reg *model.Registration, hashedPW string, salt stri
 	}
 }
 
+func (DB *Tables) CreateProvider(prov *model.RegisterProvider) {
+	DB.Providers[prov.Provider] = Provider{
+		prov.Key,
+		prov.Package,
+		prov.Callback,
+	}
+}
+
 func (DB *Tables) UpdateUser(name string, user *User) bool {
 	if val, ok := DB.Users[name]; ok {
 		val.Password = user.Password

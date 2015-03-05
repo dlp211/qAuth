@@ -34,6 +34,10 @@ type RegisterProvider struct {
 	Callback string `json:"callback"`
 }
 
+func (reg *RegisterProvider) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&reg)
+}
+
 type PackageList struct {
 	Packages []string `json:"packages"`
 }
