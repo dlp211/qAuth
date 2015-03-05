@@ -25,6 +25,7 @@ func Decrypt(payload string) string {
 	for _, b := range bytes {
 		fmt.Printf("%x ", b)
 	}
+	fmt.Println()
 	msg, err := rsa.DecryptOAEP(sha1.New(), nil, PrivKey, bytes, nil)
 	if err != nil {
 		logger.WARN("Decryption failed")
