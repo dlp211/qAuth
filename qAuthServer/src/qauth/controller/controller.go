@@ -172,7 +172,25 @@ func DisplayUserDB(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 	} else {
-		logger.WARN("ATTEMPT TO DUMP DB DENIED")
+		logger.WARN("ATTEMPT TO DUMP DB TABLE USERS DENIED")
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+}
+
+func DisplayProviderDB(w http.ResponseWriter, r *http.Request) {
+	logger.INFO("/db/show/providers")
+	var admin model.AdminDBAccess
+	err := admin.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	if authenticate.AdminAuth(admin.Key) {
+		for key, value := range DB.Providers {
+			fmt.Println(key, value.String())
+		}
+		w.WriteHeader(http.StatusOK)
+	} else {
+		logger.WARN("ATTEMPT TO DUMP DB TABLE PROVIDERS DENIED")
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
@@ -190,6 +208,7 @@ func BuildControllerSet() {
 	Controllers["/db/save"] = SaveDBsToFile
 	Controllers["/db/load"] = LoadDBsFromFile
 	Controllers["/db/show/users"] = DisplayUserDB
+	Controllers["/db/show/providers"] = DisplayProviderDB
 }
 
 /*

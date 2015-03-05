@@ -26,6 +26,10 @@ type Provider struct {
 	callback    string
 }
 
+func (p *Provider) String() string {
+	return fmt.Sprintf("KEY: %s\tPACKAGE: %s\tCALLBACK_URL: %s", p.key, p.packageName, p.callback)
+}
+
 type Tables struct {
 	Users     map[string]User
 	Providers map[string]Provider
