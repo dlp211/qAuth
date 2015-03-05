@@ -21,7 +21,7 @@ func AdminAuth(key string) bool {
 
 func Decrypt(payload string) string {
 	bytes := []byte(payload)
-	for b := range bytes {
+	for _, b := range bytes {
 		fmt.Printf("%x ", b)
 	}
 	msg, err := rsa.DecryptOAEP(sha1.New(), nil, PrivKey, bytes, nil)
