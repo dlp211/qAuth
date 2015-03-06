@@ -232,11 +232,8 @@ func TestRSA(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	logger.DEBUG(payload.Payload)
-	logger.DEBUG(payload.Modulus)
-	logger.DEBUG(payload.Exponent)
 	str := authenticate.Decrypt(payload.Payload)
-	fmt.Println(str)
+	logger.INFO("DECYPTED TEXT: " + str)
 	w.WriteHeader(http.StatusOK)
 }
 
