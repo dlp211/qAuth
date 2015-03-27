@@ -15,7 +15,7 @@ import (
 var Controllers = map[string]func(http.ResponseWriter, *http.Request){}
 var DB *db.Tables
 
-func launchTwoFactor(deviceid, username string) {
+func launchTwoFactor(username, deviceid string) {
 	logger.DEBUG("here")
 	url := "http://107.170.156.222:8080/authenticate"
 
