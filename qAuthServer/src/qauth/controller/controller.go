@@ -246,8 +246,9 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	logger.DEBUG(auth.Username + " " + auth.DeviceId + " ")
-	logger.DEBUG("HERE")
 	if user, ok := DB.Users[auth.Username]; ok {
+
+		logger.DEBUG("HERE" + user.GCMId[0])
 		sendGcmMessage(user.GCMId[0]) //fixme need to change to a map
 		w.WriteHeader(http.StatusOK)
 	} else {
