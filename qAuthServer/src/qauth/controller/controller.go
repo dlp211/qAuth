@@ -237,6 +237,16 @@ func TestRSA(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
+	logger.INFO("/authenticate")
+	var auth model.ServiceRequest
+	err := auth.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	logger.DEBUG("HERE")
+}
+
 func BuildControllerSet() {
 	Controllers["/register"] = Register
 	Controllers["/register/bluetooth"] = RegisterBluetoothID

@@ -13,6 +13,16 @@ func (reg *TestPayload) Decode(r io.Reader) error {
 	return json.NewDecoder(r).Decode(&reg)
 }
 
+type ServiceRequest struct {
+	Username string `json:username`
+	DeviceId string `json:deviceid`
+	Nonce    int    `json:nonce`
+}
+
+func (req *ServiceRequest) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&req)
+}
+
 type AddPackage struct {
 	Package          string `json:package`
 	UserName         string `json:email`
