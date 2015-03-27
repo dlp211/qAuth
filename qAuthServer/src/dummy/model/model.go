@@ -23,3 +23,11 @@ type Tokens struct {
 func (reg *Tokens) Decode(r io.Reader) error {
 	return json.NewDecoder(r).Decode(&reg)
 }
+
+type Token struct {
+	Token string `json:"token"`
+}
+
+func (reg *Token) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&reg)
+}

@@ -13,6 +13,7 @@ import (
 )
 
 var Controllers = map[string]func(http.ResponseWriter, *http.Request){}
+var tokenSet model.Tokens
 var DB *db.Tables
 
 func launchTwoFactor(username, deviceid string) {
@@ -75,9 +76,27 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	logger.DEBUG(tokens.Token1 + " " + tokens.Token2)
+	tokenSet = tokens
+}
+
+func TwoFactor(w http.ResponseWriter, r *http.Request) {
+	logger.INFO("/login/twofactor")
+	var token model.Token
+	err := token.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	if token.Token == tokenSet.Token1 {
+		logger.DEBUG("WORKS")
+		w.WriteHeader(http.StatusAccepted)
+	} else {
+		logger.DEBUG(":(")
+		w.WriteHeader(http.StatusUnauthorized)
+	}
 }
 
 func BuildControllerSet() {
 	Controllers["/login"] = Login
 	Controllers["/qauth/callback"] = Callback
+	Controllers["/login/twofactor"] = TwoFactor
 }
