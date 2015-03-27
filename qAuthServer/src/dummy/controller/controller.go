@@ -93,9 +93,9 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
+		w.WriteHeader(http.StatusAccepted)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)
-		w.WriteHeader(http.StatusAccepted)
 	} else {
 		logger.DEBUG(":(")
 		w.WriteHeader(http.StatusUnauthorized)

@@ -9,8 +9,14 @@ import (
 )
 
 func init() {
+	authenticate.PrivKey = authenticate.LoadPrivKey("DRSAKEY")
 	controller.DB = db.Init()
 	controller.BuildControllerSet()
+
+	pw1, salt1 := authenticate.NewPWHash("password")
+	pw2, salt2 := authenticate.NewPWHash("password")
+	controller.DB.CreateUser("dlp", pw1, salt1, true)
+	controller.DB.CreateUser("djk", pw2, salt2, false)
 
 	for endpoint, function := range controller.Controllers {
 		http.HandleFunc(endpoint, function)
@@ -23,10 +29,9 @@ func main() {
 	fmt.Println("|| Starting Dummy Server ||")
 	fmt.Println("============================")
 
-	pw1, salt1 := authenticate.NewPWHash("password")
-	pw2, salt2 := authenticate.NewPWHash("password")
-	controller.DB.CreateUser("dlp", pw1, salt1, true)
-	controller.DB.CreateUser("djk", pw2, salt2, false)
+	pubKey := authenticate.PrivKey.Public()
+
+	fmt.Println(pubKey)
 
 	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
