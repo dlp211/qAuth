@@ -12,12 +12,13 @@ type User struct {
 	Password    string
 	Salt        string
 	DeviceId    []string
+	GCMId       []string
 	BluetoothId string
 	Pk          model.PublicKey
 }
 
 func (u *User) String() string {
-	return fmt.Sprintf("%s %v", u.DeviceId, u.Pk)
+	return fmt.Sprintf("%s %s %v", u.DeviceId, u.GCMId, u.Pk)
 }
 
 type Provider struct {
@@ -49,6 +50,7 @@ func (DB *Tables) CreateUser(reg *model.Registration, hashedPW string, salt stri
 		hashedPW,
 		salt,
 		[]string{reg.DeviceId},
+		[]string{reg.GCMId},
 		"",
 		model.PublicKey{"", 0},
 	}

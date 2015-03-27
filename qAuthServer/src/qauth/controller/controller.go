@@ -26,7 +26,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		logger.WARN("User " + reg.UserName + " attempted to reregister")
 		w.WriteHeader(http.StatusConflict)
 	} else {
-		//TODO validate email if we go live
 		hashedPW, salt := authenticate.NewPWHash(reg.Password)
 		DB.CreateUser(&reg, hashedPW, salt)
 		logger.INFO("User " + reg.UserName + " successfully registered with deviceId: " + reg.DeviceId)
@@ -245,6 +244,33 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	logger.DEBUG("HERE")
+	if user, ok := DB.Users[auth.Username]; ok {
+		sendGcmMessage(user.GCMId[0]) //fixme need to change to a map
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+}
+
+func sendGcmMessage(gcmid string) {
+	url := "https://android.googleapis.com/gcm/send"
+
+	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"]}`)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("project_id", "156110196668")
+	req.Header.Set("Authorization", "key=AIzaSyAFqyh9ZZFiY8HRcyUlidAg7IT3rvoN-Pk")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	logger.DEBUG("response: ", string(body))
 }
 
 func BuildControllerSet() {
@@ -266,53 +292,3 @@ func BuildControllerSet() {
 
 	Controllers["/test"] = TestRSA
 }
-
-/*
-func sendToken(token string, userId string) { //eventually support sending to multiple servers
-	url := "http://107.170.156.222:8081/givetoken"
-
-	var jsonStr = []byte(`{"token":"token007","userId":"1"}`)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	logger.INFO(fmt.Sprintf("response Status:", resp.Status))
-	logger.INFO(fmt.Sprintf("response Headers:", resp.Header))
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	logger.INFO(fmt.Sprintf("*ANDROID POST* response: ", string(body)))
-}
-
-
-	G_Rest["/gettoken"] =
-		func(w http.ResponseWriter, r *http.Request) {
-			var wS watch_struct
-			err := json.NewDecoder(r.Body).Decode(&wS)
-			if err != nil {
-				panic(err)
-			}
-
-			if wS.WatchId == "007" {
-				//get userId ... "1"
-				sendToken("token007", "1")
-				fmt.Fprintf(w, "token007") //return token for userId
-			} else {
-				fmt.Fprintf(w, "false")
-			}
-		}
-
-	G_Rest["/whois"] =
-		func(w http.ResponseWriter, r *http.Request) {
-			//input := strings.SplitN(r.URL.Path, "/", 3)
-			//fmt.Fprintf(w, "Testing route 1, %s", input[2] )
-
-			//send gcm to clients for userId, client with watch will hit /gettoken
-
-		}
-*/

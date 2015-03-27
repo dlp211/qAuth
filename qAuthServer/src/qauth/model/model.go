@@ -37,6 +37,7 @@ type Registration struct {
 	UserName string `json:"email"`
 	Password string `json:"password"`
 	DeviceId string `json:"deviceId"`
+	GCMId    string `json""gcmid"`
 }
 
 func (reg *Registration) Decode(r io.Reader) error {
