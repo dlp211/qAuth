@@ -13,6 +13,7 @@ import (
 )
 
 var Controllers = map[string]func(http.ResponseWriter, *http.Request){}
+var REQUESTID = ""
 var DB *db.Tables
 
 /* USER REGISTRATION CONTROLLERS */
@@ -249,6 +250,7 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	if user, ok := DB.Users[auth.Username]; ok {
 		logger.DEBUG("HERE" + user.GCMId[0])
 		sendGcmMessage(user.GCMId[0]) //fixme need to change to a map
+		REQUESTID = user.GCMId[0]
 		w.WriteHeader(http.StatusOK)
 	} else {
 		logger.DEBUG("user not found")
@@ -265,9 +267,39 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 	}
 	if auth.Auth == 1 {
 		logger.DEBUG("AUTHENTICATED")
+		//send tokens
+		token1, token2 := "123456", "654321"
+		sendGcmMessage2(REQUESTID, token1, token2)
+		callBackProvider(token1, token2)
 	} else {
 		logger.DEBUG("FAILED")
 	}
+}
+
+func sendGcmMessage2(gcmid, token1, token2 string) {
+	logger.DEBUG("SEND GCM MESSAGE")
+	url := "https://android.googleapis.com/gcm/send"
+
+	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"], "data" : {"token1":"` + token1 + `", "token2":"` + token2 + `"}}`)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("project_id", "156110196668")
+	req.Header.Set("Authorization", "key=AIzaSyAFqyh9ZZFiY8HRcyUlidAg7IT3rvoN-Pk")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	logger.DEBUG("response: " + string(body))
+}
+
+func callBackProvider(token1, token2 string) {
+	//TODO: Implement this
 }
 
 func sendGcmMessage(gcmid string) {
