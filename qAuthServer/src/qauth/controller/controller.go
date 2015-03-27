@@ -256,6 +256,20 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
+	logger.INFO("/client/authenticate")
+	var auth model.ClientAuth
+	err := auth.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	if auth.Auth == 1 {
+		logger.DEBUG("AUTHENTICATED")
+	} else {
+		logger.DEBUG("FAILED")
+	}
+}
+
 func sendGcmMessage(gcmid string) {
 	logger.DEBUG("SEND GCM MESSAGE")
 	url := "https://android.googleapis.com/gcm/send"
@@ -294,6 +308,7 @@ func BuildControllerSet() {
 	Controllers["/db/show/providers"] = DisplayProviderDB
 
 	Controllers["/authenticate"] = AttemptAuthenticate
+	Controllers["/client/authenticate"] = ClientAuthenticate
 
 	Controllers["/test"] = TestRSA
 }

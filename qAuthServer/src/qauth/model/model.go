@@ -23,6 +23,14 @@ func (req *ServiceRequest) Decode(r io.Reader) error {
 	return json.NewDecoder(r).Decode(&req)
 }
 
+type ClientAuth struct {
+	Auth int `json:auth`
+}
+
+func (req *ClientAuth) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&req)
+}
+
 type AddPackage struct {
 	Package          string `json:package`
 	UserName         string `json:email`
