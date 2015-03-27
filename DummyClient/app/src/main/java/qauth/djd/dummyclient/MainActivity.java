@@ -11,7 +11,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import org.apache.http.HttpResponse;
@@ -52,6 +51,7 @@ public class MainActivity extends ActionBarActivity {
         Intent intent = getIntent();
         tv3 = (TextView) findViewById(R.id.textView3);
 
+        /*
         try {
             if ( intent.getExtras().getString("qauthToken") != null ){
                 tv3.setText( "qauthToken: " + intent.getExtras().getString("qauthToken") );
@@ -59,7 +59,7 @@ public class MainActivity extends ActionBarActivity {
             }
         } catch (Exception e){
             Log.i("exception", "exception: " + e);
-        }
+        }*/
     }
 
 
@@ -178,48 +178,6 @@ public class MainActivity extends ActionBarActivity {
         protected void onPostExecute(String result) {
             if ( result != null ){
                 Log.i("Login Task", "results: " + result);
-            } else {
-                Log.i("Login Task", "No internet connection");
-                //Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-    }
-
-    private class TwoFactorTask extends AsyncTask<String, Void, String> {
-
-        public String token;
-        public String userId;
-
-        TwoFactorTask(
-                String token,
-                String userId ){
-            this.token = token;
-            this.userId = userId;
-        }
-        @Override
-        protected String doInBackground(String... params) {
-
-            Gson gson = new GsonBuilder().create();
-            Map<String, String> newLoop = new HashMap<String, String>();
-            newLoop.put("token", this.token);
-            //newLoop.put("userId", this.userId);
-
-            String json = gson.toJson(newLoop, Map.class);
-            Log.i("LoginTask", "json: " + json);
-            try {
-                return EntityUtils.toString(makeRequest("http://107.170.156.222:8081/login/twofactor", json).getEntity());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        protected void onPostExecute(String result) {
-            if ( result != null ){
-                Log.i("Login Task", "results: " + result);
-                tv3.setText( tv3.getText() + "\nAuthenticated successfully!");
             } else {
                 Log.i("Login Task", "No internet connection");
                 //Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show();
