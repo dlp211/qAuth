@@ -262,6 +262,8 @@ func BuildControllerSet() {
 	Controllers["/db/show/users"] = DisplayUserDB
 	Controllers["/db/show/providers"] = DisplayProviderDB
 
+	Controllers["/authenticate"] = AttemptAuthenticate
+
 	Controllers["/test"] = TestRSA
 }
 

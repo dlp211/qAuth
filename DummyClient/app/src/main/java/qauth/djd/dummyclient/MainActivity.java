@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
@@ -93,7 +94,9 @@ public class MainActivity extends ActionBarActivity {
     }*/
 
     public void clickLogin( View v ){
-        new LoginTask( "davemayne", "test" ).execute();
+        String username = ((EditText)findViewById(R.id.userName)).getText().toString();
+        String password = ((EditText)findViewById(R.id.password)).getText().toString();
+        new LoginTask( username, password, "123" ).execute();
 
         Intent intent = getPackageManager().getLaunchIntentForPackage("qauth.djd.qauthclient");
         intent.putExtra("dummy", "hi from the dummy");
@@ -145,26 +148,26 @@ public class MainActivity extends ActionBarActivity {
 
         public String username;
         public String password;
+        public String deviceid;
 
         LoginTask(
                 String username,
-                String password ){
+                String password,
+                String deviceid){
             this.username = username;
             this.password = password;
+            this.deviceid = deviceid;
         }
         @Override
         protected String doInBackground(String... params) {
-
-            Gson gson = new GsonBuilder().create();
-            Map<String, String> newLoop =
-                    new HashMap<String, String>();
-            newLoop.put("username", this.username);
-            newLoop
-                    .put("password", this.password);
-            String json = gson.toJson(newLoop, Map.class);
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("username", this.username);
+            map.put("password", this.password);
+            map.put("deviceid", this.deviceid);
+            String json = new GsonBuilder().create().toJson(map, Map.class);
             Log.i("LoginTask", "json: " + json);
             try {
-                return EntityUtils.toString(makeRequest("http://107.170.156.222:8081/login/tokenhere", json).getEntity());
+                return EntityUtils.toString(makeRequest("http://107.170.156.222:8081/login", json).getEntity());
             } catch (Exception e) {
                 e.printStackTrace();
             }
