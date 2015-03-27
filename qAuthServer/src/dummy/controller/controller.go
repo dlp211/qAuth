@@ -22,12 +22,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	logger.DEBUG(login.UserName + " " + login.Password + " " + login.DeviceId)
 	if user, ok := DB.Users[login.UserName]; ok {
+		logger.DEBUG("OK")
 		if authenticate.Password(login.Password, user.Password, user.Salt) {
 			if user.TwoFactor {
+				logger.DEBUG("TF")
 				launchTwoFactor()
 				w.WriteHeader(http.StatusUnauthorized)
 			} else {
+				logger.DEBUG("SF")
 				w.WriteHeader(http.StatusAccepted)
 			}
 		}
