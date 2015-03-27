@@ -300,6 +300,27 @@ func sendGcmMessage2(gcmid, token1, token2 string) {
 
 func callBackProvider(token1, token2 string) {
 	//TODO: Implement this
+	logger.DEBUG("SEND CALLBACK")
+	url := "http://107.170.156.222:8081/qauth/callback"
+
+	var jsonStr = []byte(`{"token1":"` + token1 + `", "token2":"` + token2 + `"}`)
+	logger.DEBUG(string(jsonStr))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	logger.INFO(fmt.Sprintf("response Status:", resp.Status))
+	logger.INFO(fmt.Sprintf("response Headers:", resp.Header))
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	logger.INFO(fmt.Sprintf("*ANDROID POST* response: ", string(body)))
+
 }
 
 func sendGcmMessage(gcmid string) {
