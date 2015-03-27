@@ -55,7 +55,7 @@ func LoadPubKey() {
 		logger.WARN("Error wans't nil")
 		panic(err)
 	}
-	logger.INFO(pk)
+	logger.INFO(pk.N)
 	var ok bool
 	PublicServerKey.N, ok = PublicServerKey.N.SetString(pk.N, 10)
 	if !ok {
