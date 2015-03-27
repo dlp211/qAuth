@@ -55,7 +55,7 @@ public class MainActivity extends ActionBarActivity {
         try {
             if ( intent.getExtras().getString("qauthToken") != null ){
                 tv3.setText( "qauthToken: " + intent.getExtras().getString("qauthToken") );
-                new AuthMeTask( intent.getExtras().getString("qauthToken"), "1" ).execute();
+                new TwoFactorTask( intent.getExtras().getString("qauthToken"), "1" ).execute();
             }
         } catch (Exception e){
             Log.i("exception", "exception: " + e);
@@ -99,7 +99,7 @@ public class MainActivity extends ActionBarActivity {
         new LoginTask( username, password, "123" ).execute();
 
         Intent intent = getPackageManager().getLaunchIntentForPackage("qauth.djd.qauthclient");
-        intent.putExtra("dummy", "hi from the dummy");
+        intent.putExtra("packageName", "qauth.djd.dummyclient");
         startActivityForResult(intent, 1);
     }
 
@@ -186,12 +186,12 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-    private class AuthMeTask extends AsyncTask<String, Void, String> {
+    private class TwoFactorTask extends AsyncTask<String, Void, String> {
 
         public String token;
         public String userId;
 
-        AuthMeTask(
+        TwoFactorTask(
                 String token,
                 String userId ){
             this.token = token;
@@ -203,12 +203,12 @@ public class MainActivity extends ActionBarActivity {
             Gson gson = new GsonBuilder().create();
             Map<String, String> newLoop = new HashMap<String, String>();
             newLoop.put("token", this.token);
-            newLoop.put("userId", this.userId);
+            //newLoop.put("userId", this.userId);
 
             String json = gson.toJson(newLoop, Map.class);
             Log.i("LoginTask", "json: " + json);
             try {
-                return EntityUtils.toString(makeRequest("http://107.170.156.222:8081/authme", json).getEntity());
+                return EntityUtils.toString(makeRequest("http://107.170.156.222:8081/login/twofactor", json).getEntity());
             } catch (Exception e) {
                 e.printStackTrace();
             }
