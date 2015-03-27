@@ -260,7 +260,7 @@ func sendGcmMessage(gcmid string) {
 	logger.DEBUG("SEND GCM MESSAGE")
 	url := "https://android.googleapis.com/gcm/send"
 
-	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"]}`)
+	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"], "data" : {"package":"dummy"}}`)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
