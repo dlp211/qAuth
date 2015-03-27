@@ -247,11 +247,11 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.DEBUG(auth.Username + " " + auth.DeviceId + " ")
 	if user, ok := DB.Users[auth.Username]; ok {
-
 		logger.DEBUG("HERE" + user.GCMId[0])
 		sendGcmMessage(user.GCMId[0]) //fixme need to change to a map
 		w.WriteHeader(http.StatusOK)
 	} else {
+		logger.DEBUG("user not found")
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
