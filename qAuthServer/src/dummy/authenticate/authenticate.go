@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"logger"
+	"math/big"
 	"net/http"
 	"os"
 )
@@ -56,11 +57,8 @@ func LoadPubKey() {
 		panic(err)
 	}
 	logger.INFO(pk.N)
-	var ok bool
-	PublicServerKey.N, ok = PublicServerKey.N.SetString(pk.N, 10)
-	if !ok {
-		logger.WARN("BAD")
-	}
+	PublicServerKey.N = big.NewInt(0)
+	_, _ = PublicServerKey.N.SetString(pk.N, 10)
 	PublicServerKey.E = pk.E
 }
 
