@@ -15,6 +15,7 @@ import (
 
 var PrivKey *rsa.PrivateKey
 var PubKey crypto.PublicKey
+var PublicServerKey crypto.PublicKey
 
 func Password(password, salt, hash string) bool {
 	hasher := sha1.New()
@@ -32,6 +33,10 @@ func NewPWHash(password string) (string, string) {
 	hasher := sha1.New()
 	hasher.Write([]byte(password + salt))
 	return fmt.Sprintf("% x", hasher.Sum(nil)), salt
+}
+
+func LoadPubKey() {
+
 }
 
 func LoadPrivKey(env string) *rsa.PrivateKey {
