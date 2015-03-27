@@ -1,22 +1,16 @@
 package main
 
 import (
-	"crypto/rsa"
 	"dummy/authenticate"
 	"dummy/controller"
 	"dummy/db"
 	"fmt"
-	"logger"
 	"net/http"
 )
 
 func init() {
 	authenticate.PrivKey = authenticate.LoadPrivKey("DRSAKEY")
-	key, ok := authenticate.PrivKey.Public().(rsa.PublicKey)
-	if !ok {
-		logger.WARN("BAD")
-	}
-	authenticate.PubKey = key
+	authenticate.PubKey = authenticate.PrivKey.Public()
 
 	controller.DB = db.Init()
 	controller.BuildControllerSet()

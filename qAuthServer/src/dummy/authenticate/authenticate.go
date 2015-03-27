@@ -2,6 +2,7 @@ package authenticate
 
 import (
 	"bufio"
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
@@ -13,7 +14,7 @@ import (
 )
 
 var PrivKey *rsa.PrivateKey
-var PubKey rsa.PublicKey
+var PubKey crypto.PublicKey
 
 func Password(password, salt, hash string) bool {
 	hasher := sha1.New()
