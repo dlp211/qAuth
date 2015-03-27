@@ -9,7 +9,9 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"logger"
+	"net/http"
 	"os"
 )
 
@@ -36,6 +38,23 @@ func NewPWHash(password string) (string, string) {
 }
 
 func LoadPubKey() {
+	logger.DEBUG("here")
+	url := "http://107.170.156.222:8080/public/key"
+
+	req, err := http.NewRequest("GET", url, nil)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	logger.INFO(fmt.Sprintf("response Status:", resp.Status))
+	logger.INFO(fmt.Sprintf("response Headers:", resp.Header))
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	logger.INFO(fmt.Sprintf("*ANDROID POST* response: ", string(body)))
 
 }
 

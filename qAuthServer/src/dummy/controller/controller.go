@@ -5,7 +5,6 @@ import (
 	"dummy/authenticate"
 	"dummy/db"
 	"dummy/model"
-
 	"fmt"
 	"io/ioutil"
 	"logger"
