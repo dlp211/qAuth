@@ -31,3 +31,7 @@ type Token struct {
 func (reg *Token) Decode(r io.Reader) error {
 	return json.NewDecoder(r).Decode(&reg)
 }
+
+func (reg *Token) Marshal() ([]byte, error) {
+	return json.Marshal(reg)
+}
