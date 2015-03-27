@@ -255,6 +255,7 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendGcmMessage(gcmid string) {
+	logger.DEBUG("SEND GCM MESSAGE")
 	url := "https://android.googleapis.com/gcm/send"
 
 	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"]}`)
