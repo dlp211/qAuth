@@ -10,6 +10,8 @@ import (
 
 func init() {
 	authenticate.PrivKey = authenticate.LoadPrivKey("DRSAKEY")
+	authenticate.PubKey = authenticate.PrivKey.Public()
+
 	controller.DB = db.Init()
 	controller.BuildControllerSet()
 
@@ -29,9 +31,7 @@ func main() {
 	fmt.Println("|| Starting Dummy Server ||")
 	fmt.Println("============================")
 
-	pubKey := authenticate.PrivKey.Public()
-
-	fmt.Println(pubKey)
+	fmt.Println(authenticate.PubKey)
 
 	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
