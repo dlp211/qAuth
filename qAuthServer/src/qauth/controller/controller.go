@@ -30,7 +30,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	} else {
 		hashedPW, salt := authenticate.NewPWHash(reg.Password)
 		DB.CreateUser(&reg, hashedPW, salt)
-		logger.INFO("User " + reg.UserName + " successfully registered with deviceId: " + reg.DeviceId)
+		logger.INFO("User " + reg.UserName + " successfully registered with deviceId: " + reg.DeviceId + "and GCM ID: " + reg.GCMId)
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
