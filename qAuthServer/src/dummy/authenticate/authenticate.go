@@ -1,9 +1,15 @@
 package authenticate
 
 import (
+	"bufio"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha1"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"logger"
+	"os"
 )
 
 var PrivKey *rsa.PrivateKey
