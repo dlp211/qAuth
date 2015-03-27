@@ -34,6 +34,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				logger.DEBUG("SF")
 				w.WriteHeader(http.StatusAccepted)
 			}
+		} else {
+			logger.DEBUG("WTF")
 		}
 	} else {
 		logger.WARN("Unregistered user " + login.UserName + " attempted to login")
