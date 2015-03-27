@@ -88,6 +88,13 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	}
 	if token.Token == tokenSet.Token1 {
 		logger.DEBUG("WORKS")
+		token = model.Token{tokenSet.Token2}
+		js, err := token.Marshal()
+		if err != nil {
+			panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
 		w.WriteHeader(http.StatusAccepted)
 	} else {
 		logger.DEBUG(":(")
