@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"logger"
 	"net/http"
 	"qauth/authenticate"
@@ -270,7 +272,7 @@ func sendGcmMessage(gcmid string) {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	logger.DEBUG("response: ", string(body))
+	logger.DEBUG("response: " + string(body))
 }
 
 func BuildControllerSet() {
