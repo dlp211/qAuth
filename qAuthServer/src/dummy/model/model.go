@@ -6,7 +6,7 @@ import (
 )
 
 type Login struct {
-	UserName string `json:"email"`
+	UserName string `json:"username"`
 	Password string `json:"password"`
 	DeviceId string `json:"deviceId"`
 }

@@ -26,6 +26,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		if authenticate.Password(login.Password, user.Password, user.Salt) {
 			if user.TwoFactor {
 				launchTwoFactor()
+				w.WriteHeader(http.StatusUnauthorized)
 			} else {
 				w.WriteHeader(http.StatusAccepted)
 			}
