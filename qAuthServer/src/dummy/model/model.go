@@ -35,3 +35,12 @@ func (reg *Token) Decode(r io.Reader) error {
 func (reg *Token) Marshal() ([]byte, error) {
 	return json.Marshal(reg)
 }
+
+type PublicKey struct {
+	N string `json:"N"`
+	E int    `json:"E"`
+}
+
+func (pk *PublicKey) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(pk)
+}

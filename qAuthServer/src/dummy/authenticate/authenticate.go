@@ -2,14 +2,13 @@ package authenticate
 
 import (
 	"bufio"
-	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
+	"dummy/model"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"logger"
 	"net/http"
 	"os"
@@ -17,7 +16,7 @@ import (
 
 var PrivKey *rsa.PrivateKey
 var PubKey *rsa.PublicKey
-var PublicServerKey crypto.PublicKey
+var PublicServerKey rsa.PublicKey
 
 func Password(password, salt, hash string) bool {
 	hasher := sha1.New()
@@ -50,12 +49,17 @@ func LoadPubKey() {
 	}
 	defer resp.Body.Close()
 
-	logger.INFO(fmt.Sprintf("response Status:", resp.Status))
-	logger.INFO(fmt.Sprintf("response Headers:", resp.Header))
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	logger.INFO(fmt.Sprintf("*ANDROID POST* response: ", string(body)))
-
+	var pk model.PublicKey
+	err = pk.Decode(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	var ok bool
+	PublicServerKey.N, ok = PublicServerKey.N.SetString(pk.N, 10)
+	if !ok {
+		logger.WARN("BAD")
+	}
+	PublicServerKey.E = pk.E
 }
 
 func LoadPrivKey(env string) *rsa.PrivateKey {
