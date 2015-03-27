@@ -70,7 +70,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func Callback(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/callback")
 	var tokens model.Tokens
-	err := tokens.Decode(r.body)
+	err := tokens.Decode(r.Body)
 	if err != nil {
 		panic(err)
 	}
