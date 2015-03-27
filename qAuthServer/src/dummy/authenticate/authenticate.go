@@ -52,8 +52,10 @@ func LoadPubKey() {
 	var pk model.PublicKey
 	err = pk.Decode(resp.Body)
 	if err != nil {
+		logger.WARN("Error wans't nil")
 		panic(err)
 	}
+	logger.INFO(pk)
 	var ok bool
 	PublicServerKey.N, ok = PublicServerKey.N.SetString(pk.N, 10)
 	if !ok {
