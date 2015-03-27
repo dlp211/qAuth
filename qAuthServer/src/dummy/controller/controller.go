@@ -25,7 +25,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	logger.DEBUG(login.UserName + " " + login.Password + " " + login.DeviceId)
 	if user, ok := DB.Users[login.UserName]; ok {
 		logger.DEBUG("OK")
-		if authenticate.Password(login.Password, user.Password, user.Salt) {
+		if authenticate.Password(login.Password, user.Salt, user.Password) {
 			if user.TwoFactor {
 				logger.DEBUG("TF")
 				launchTwoFactor()
