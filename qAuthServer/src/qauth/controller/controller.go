@@ -241,11 +241,11 @@ func TestRSA(w http.ResponseWriter, r *http.Request) {
 func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/authenticate")
 	var auth model.ServiceRequest
-	logger.DEBUG(auth.Username + " " + auth.DeviceId + " ")
 	err := auth.Decode(r.Body)
 	if err != nil {
 		panic(err)
 	}
+	logger.DEBUG(auth.Username + " " + auth.DeviceId + " ")
 	logger.DEBUG("HERE")
 	if user, ok := DB.Users[auth.Username]; ok {
 		sendGcmMessage(user.GCMId[0]) //fixme need to change to a map
