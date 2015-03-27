@@ -15,6 +15,7 @@ import (
 
 var AdminKey string
 var PrivKey *rsa.PrivateKey
+var PubKey *rsa.PublicKey
 
 func AdminAuth(key string) bool {
 	return AdminKey == key
@@ -75,5 +76,6 @@ func LoadPrivKey(env string) *rsa.PrivateKey {
 		logger.PANIC("PRIVATE KEY FAILED TO LOAD")
 		panic(err)
 	}
+	PubKey = &privKey.PublicKey
 	return privKey
 }

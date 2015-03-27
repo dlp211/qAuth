@@ -14,7 +14,7 @@ import (
 )
 
 var PrivKey *rsa.PrivateKey
-var PubKey crypto.PublicKey
+var PubKey *rsa.PublicKey
 var PublicServerKey crypto.PublicKey
 
 func Password(password, salt, hash string) bool {

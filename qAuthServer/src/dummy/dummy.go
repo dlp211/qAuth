@@ -10,7 +10,7 @@ import (
 
 func init() {
 	authenticate.PrivKey = authenticate.LoadPrivKey("DRSAKEY")
-	authenticate.PubKey = authenticate.PrivKey.Public()
+	authenticate.PubKey = &authenticate.PrivKey.PublicKey
 
 	controller.DB = db.Init()
 	controller.BuildControllerSet()

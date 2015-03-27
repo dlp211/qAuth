@@ -345,6 +345,19 @@ func sendGcmMessage(gcmid string) {
 	logger.DEBUG("response: " + string(body))
 }
 
+func PublicKey(w http.ResponseWriter, r *http.Request) {
+	pk := model.PublicKey{
+		authenticate.PubKey.N.String(),
+		authenticate.PubKey.E,
+	}
+	js, err := pk.Marshal()
+	if err != nil {
+		logger.WARN("BAD")
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
 func BuildControllerSet() {
 	Controllers["/register"] = Register
 	Controllers["/register/bluetooth"] = RegisterBluetoothID
@@ -362,6 +375,8 @@ func BuildControllerSet() {
 
 	Controllers["/authenticate"] = AttemptAuthenticate
 	Controllers["/client/authenticate"] = ClientAuthenticate
+
+	Controllers["/public/key"] = PublicKey
 
 	Controllers["/test"] = TestRSA
 }

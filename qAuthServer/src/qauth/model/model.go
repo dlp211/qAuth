@@ -89,6 +89,10 @@ func (admin *AdminDBAccess) Decode(r io.Reader) error {
 }
 
 type PublicKey struct {
-	N string
-	E int
+	N string `json:"N"`
+	E int    `json:"E"`
+}
+
+func (pk *PublicKey) Marshal() ([]byte, error) {
+	return json.Marshal(pk)
 }
