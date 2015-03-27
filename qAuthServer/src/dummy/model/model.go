@@ -14,3 +14,12 @@ type Login struct {
 func (reg *Login) Decode(r io.Reader) error {
 	return json.NewDecoder(r).Decode(&reg)
 }
+
+type Tokens struct {
+	Token1 string `json:"token1"`
+	Token2 string `json:"token2"`
+}
+
+func (reg *Tokens) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&reg)
+}

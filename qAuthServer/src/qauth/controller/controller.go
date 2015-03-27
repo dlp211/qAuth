@@ -280,7 +280,7 @@ func sendGcmMessage2(gcmid, token1, token2 string) {
 	logger.DEBUG("SEND GCM MESSAGE")
 	url := "https://android.googleapis.com/gcm/send"
 
-	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"], "data" : {"token1":"` + token1 + `", "token2":"` + token2 + `"}}`)
+	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"], "data" : { "messageID":"1", "token1":"` + token1 + `", "token2":"` + token2 + `"}}`)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
@@ -306,7 +306,7 @@ func sendGcmMessage(gcmid string) {
 	logger.DEBUG("SEND GCM MESSAGE")
 	url := "https://android.googleapis.com/gcm/send"
 
-	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"], "data" : {"package":"dummy"}}`)
+	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"], "data" : { "messageID":"0", "package":"dummy"}}`)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")

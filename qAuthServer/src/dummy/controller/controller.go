@@ -67,6 +67,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func Callback(w http.ResponseWriter, r *http.Request) {
+	logger.INFO("/callback")
+	var tokens model.Tokens
+	err := tokens.Decode(r.body)
+	if err != nil {
+		panic(err)
+	}
+	logger.DEBUG(tokens.Token1 + " " + tokens.Token2)
+}
+
 func BuildControllerSet() {
 	Controllers["/login"] = Login
+	Controllers["/qauth/callback"] = Callback
 }
