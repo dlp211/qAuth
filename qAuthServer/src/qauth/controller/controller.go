@@ -2,10 +2,12 @@ package controller
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"logger"
+	"math/big"
 	"net/http"
 	"qauth/authenticate"
 	"qauth/db"
@@ -241,15 +243,27 @@ func TestRSA(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest) {
-	logger.DEBUG("SEND GCM MESSAGE")
+func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest, user *db.User) {
 	url := "https://android.googleapis.com/gcm/send"
+
+	var pk rsa.PublicKey
+	pk.N = big.NewInt(0)
+	_, _ = pk.N.SetString(user.Pk.N, 10)
+	pk.E = user.Pk.E
+
+	nonce := authenticate.IncNonce(auth.Nonce)
+	nonceenc := authenticate.EncryptNonce(nonce, &pk)
+	hash := authenticate.HashAndSign(auth.Package, auth.DeviceId, nonceenc)
 
 	msg := model.GcmMessage{
 		[]string{gcmid},
 		model.Data{
 			"0",
 			auth.Package,
+			auth.DeviceId,
+			nonce,
+			nonceenc,
+			hash,
 		},
 	}
 	js, err := msg.Marshal()
@@ -295,7 +309,7 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	}
 	if user, ok := DB.Users[auth.Username]; ok {
 		logger.DEBUG("HERE" + user.GCMId[0])
-		sendGcmMessage(user.GCMId[0], prov, &auth)
+		sendGcmMessage(user.GCMId[0], prov, &auth, &user)
 		w.WriteHeader(http.StatusOK)
 	} else {
 		logger.DEBUG("user not found")

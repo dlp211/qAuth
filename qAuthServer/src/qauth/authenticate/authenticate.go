@@ -15,6 +15,7 @@ import (
 	"os"
 	"qauth/db"
 	"qauth/model"
+	"strconv"
 )
 
 var AdminKey string
@@ -23,8 +24,16 @@ var GCM string
 var PrivKey *rsa.PrivateKey
 var PubKey *rsa.PublicKey
 
+var maxInt *big.Int = big.NewInt(9223372036854775807)
+
 func AdminAuth(key string) bool {
 	return AdminKey == key
+}
+
+func GenTokens() (*big.Int, *big.Int) {
+	tk1, _ := rand.Int(rand.Reader, maxInt)
+	tk2, _ := rand.Int(rand.Reader, maxInt)
+	return tk1, tk2
 }
 
 func Decrypt(payload string) string {
@@ -120,4 +129,29 @@ func ValidateRequest(req *model.ServiceRequest, DB *db.Tables) (*db.Provider, bo
 		return &prov, true
 	}
 	return &db.Provider{}, false
+}
+
+func IncNonce(nonce string) string {
+	non, _ := strconv.ParseInt(nonce, 10, 64)
+	non++
+	return strconv.FormatInt(non, 10)
+}
+
+func EncryptNonce(non string, pk *rsa.PublicKey) string {
+	msg := []byte(non)
+	sha1hash := sha1.New()
+	encryptedmsg, err := rsa.EncryptOAEP(sha1hash, rand.Reader, pk, msg, nil)
+	if err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(encryptedmsg)
+}
+
+func HashAndSign(one, two, three string) string {
+	hash := Hash(one, two, three)
+	bytes, err := rsa.SignPKCS1v15(rand.Reader, PrivKey, crypto.SHA1, hash)
+	if err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(bytes)
 }

@@ -112,6 +112,10 @@ func (pk *PublicKey) Marshal() ([]byte, error) {
 type Data struct {
 	MessageId string `json:"messageID"`
 	Package   string `json:"package"`
+	DeviceId  string `json:"deviceid"`
+	Nonce     string `json:"nonce"`
+	NonceEnc  string `json:"nonceEnc"`
+	Hash      string `json:"hash"`
 }
 
 type GcmMessage struct {
