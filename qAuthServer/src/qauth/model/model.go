@@ -65,10 +65,13 @@ func (reg *RegisterBT) Decode(r io.Reader) error {
 }
 
 type RegisterProvider struct {
-	Provider string `json:"provider"`
-	Key      string `json:"key"`
-	Package  string `json:"package"`
-	Callback string `json:"callback"`
+	Provider  string `json:"provider"`
+	Key       string `json:"key"`
+	Package   string `json:"package"`
+	Callback  string `json:"callback"`
+	TwoFactor string `json:"twofactor"`
+	N         string `json:"N"`
+	E         int    `json:"E"`
 }
 
 func (reg *RegisterProvider) Decode(r io.Reader) error {

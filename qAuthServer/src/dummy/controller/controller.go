@@ -19,7 +19,7 @@ func launchTwoFactor(username, deviceid string) {
 	logger.DEBUG("here")
 	url := "http://107.170.156.222:8080/authenticate"
 
-	var jsonStr = []byte(`{"deviceid":"` + deviceid + `", "username":"` + username + `", "nonce":123}`)
+	jsonStr := []byte(`{"deviceid":"` + deviceid + `", "username":"` + username + `", "nonce":123}`)
 	logger.DEBUG(string(jsonStr))
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")

@@ -25,6 +25,7 @@ type Provider struct {
 	Key          string
 	ProviderName string
 	Callback     string
+	TwoFactor    string
 	Users        map[string]string
 	Pk           model.PublicKey
 }
@@ -61,8 +62,9 @@ func (DB *Tables) CreateProvider(prov *model.RegisterProvider) {
 		prov.Key,
 		prov.Provider,
 		prov.Callback,
+		prov.TwoFactor,
 		make(map[string]string),
-		model.PublicKey{"", 0},
+		model.PublicKey{prov.N, prov.E},
 	}
 }
 

@@ -44,3 +44,17 @@ type PublicKey struct {
 func (pk *PublicKey) Decode(r io.Reader) error {
 	return json.NewDecoder(r).Decode(pk)
 }
+
+type RegisterProvider struct {
+	Provider  string `json:"provider"`
+	Key       string `json:"key"`
+	Package   string `json:"package"`
+	Callback  string `json:"callback"`
+	TwoFactor string `json:"twofactor"`
+	N         string `json:"N"`
+	E         int    `json:"E"`
+}
+
+func (reg *RegisterProvider) Marshal() ([]byte, error) {
+	return json.Marshal(reg)
+}
