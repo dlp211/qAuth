@@ -16,6 +16,8 @@ var Controllers = map[string]func(http.ResponseWriter, *http.Request){}
 var REQUESTID = ""
 var DB *db.Tables
 
+var request model.Request
+
 /* USER REGISTRATION CONTROLLERS */
 func Register(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/register")
@@ -239,6 +241,38 @@ func TestRSA(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest) {
+	logger.DEBUG("SEND GCM MESSAGE")
+	url := "https://android.googleapis.com/gcm/send"
+
+	msg := model.GcmMessage{
+		[]string{gcmid},
+		model.Data{
+			"0",
+			auth.Package,
+		},
+	}
+	js, err := msg.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("project_id", authenticate.PROJID)
+	req.Header.Set("Authorization", authenticate.GCM)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	logger.DEBUG("response: " + string(body))
+}
+
 func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/authenticate")
 	var auth model.ServiceRequest
@@ -247,10 +281,21 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	logger.DEBUG(auth.Username + " " + auth.DeviceId + " ")
+
+	prov, ok := authenticate.ValidateRequest(&auth, DB)
+	if !ok {
+		logger.WARN("Invalid Request")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	request = model.Request{
+		auth.Username,
+		auth.Nonce,
+		auth.DeviceId,
+	}
 	if user, ok := DB.Users[auth.Username]; ok {
 		logger.DEBUG("HERE" + user.GCMId[0])
-		sendGcmMessage(user.GCMId[0]) //fixme need to change to a map
-		REQUESTID = user.GCMId[0]
+		sendGcmMessage(user.GCMId[0], prov, &auth)
 		w.WriteHeader(http.StatusOK)
 	} else {
 		logger.DEBUG("user not found")
@@ -321,28 +366,6 @@ func callBackProvider(token1, token2 string) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	logger.INFO(fmt.Sprintf("*ANDROID POST* response: ", string(body)))
 
-}
-
-func sendGcmMessage(gcmid string) {
-	logger.DEBUG("SEND GCM MESSAGE")
-	url := "https://android.googleapis.com/gcm/send"
-
-	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"], "data" : { "messageID":"0", "package":"dummy"}}`)
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("project_id", "156110196668")
-	req.Header.Set("Authorization", "key=AIzaSyAFqyh9ZZFiY8HRcyUlidAg7IT3rvoN-Pk")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	logger.DEBUG("response: " + string(body))
 }
 
 func PublicKey(w http.ResponseWriter, r *http.Request) {

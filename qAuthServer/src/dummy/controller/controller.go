@@ -9,19 +9,20 @@ import (
 	"io/ioutil"
 	"logger"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 var Controllers = map[string]func(http.ResponseWriter, *http.Request){}
 var tokenSet model.Tokens
 var DB *db.Tables
+var Package = "qauth.djd.dummyclient"
 
-func launchTwoFactor(username, deviceid string) {
-	logger.DEBUG("here")
-	url := "http://107.170.156.222:8080/authenticate"
+var request model.Request
+var Session map[string]model.Session
 
-	jsonStr := []byte(`{"deviceid":"` + deviceid + `", "username":"` + username + `", "nonce":123}`)
-	logger.DEBUG(string(jsonStr))
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+func WebRequest(protocol, url string, js []byte) {
+	req, err := http.NewRequest(protocol, url, bytes.NewBuffer(js))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -31,11 +32,32 @@ func launchTwoFactor(username, deviceid string) {
 	}
 	defer resp.Body.Close()
 
-	logger.INFO(fmt.Sprintf("response Status:", resp.Status))
-	logger.INFO(fmt.Sprintf("response Headers:", resp.Header))
-
+	logger.INFO(fmt.Sprintf("response Status: ", resp.Status))
+	logger.INFO(fmt.Sprintf("response Headers: ", resp.Header))
 	body, _ := ioutil.ReadAll(resp.Body)
-	logger.INFO(fmt.Sprintf("*ANDROID POST* response: ", string(body)))
+	logger.INFO(fmt.Sprintf("response Body: ", string(body)))
+}
+
+func launchTwoFactor(username, deviceid string) {
+	url := "http://107.170.156.222:8080/authenticate"
+
+	nonce := authenticate.EncryptNonce(request.Nonce)
+	authReq := model.AuthRequest{
+		Package,
+		username,
+		deviceid,
+		strconv.FormatInt(request.Nonce, 10),
+		nonce,
+		authenticate.HashAndSign(username, deviceid, nonce),
+	}
+
+	js, err := authReq.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	logger.DEBUG(string(js))
+	WebRequest("POST", url, js)
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -48,22 +70,33 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	logger.DEBUG(login.UserName + " " + login.Password + " " + login.DeviceId)
 	if user, ok := DB.Users[login.UserName]; ok {
-		logger.DEBUG("OK")
 		if authenticate.Password(login.Password, user.Salt, user.Password) {
 			if user.TwoFactor {
-				logger.DEBUG("TF")
+				nonce, err := authenticate.GenNonce()
+				if err != nil {
+					panic(err)
+				}
+				request = model.Request{login.UserName, nonce.Int64(), login.DeviceId}
 				launchTwoFactor(login.UserName, login.DeviceId)
-				w.WriteHeader(http.StatusUnauthorized)
-			} else {
-				logger.DEBUG("SF")
 				w.WriteHeader(http.StatusAccepted)
+			} else {
+				d := model.Data{user.GPA, "ABCDEFG"}
+				js, err := d.Marshal()
+				if err != nil {
+					panic(err)
+				}
+				Session["ABCDEFG"] = model.Session{login.UserName, time.Now().Add(time.Minute * 30)}
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(js)
 			}
 		} else {
-			logger.DEBUG("WTF")
+			logger.WARN("Wrong Password")
+			w.WriteHeader(http.StatusUnauthorized)
 		}
 	} else {
 		logger.WARN("Unregistered user " + login.UserName + " attempted to login")
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
 
@@ -87,6 +120,8 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	}
 	if token.Token == tokenSet.Token1 {
 		logger.DEBUG("WORKS")
+
+		//start a session
 		token = model.Token{tokenSet.Token2}
 		js, err := token.Marshal()
 		if err != nil {

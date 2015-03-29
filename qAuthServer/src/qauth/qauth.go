@@ -9,7 +9,9 @@ import (
 )
 
 func init() {
-	authenticate.AdminKey = authenticate.LoadAdminKey("ADMINKEY")
+	authenticate.AdminKey = authenticate.LoadKey("ADMINKEY")
+	authenticate.PROJID = authenticate.LoadKey("PROJID")
+	authenticate.GCM = authenticate.LoadKey("GCMKEY")
 	authenticate.PrivKey = authenticate.LoadPrivKey("RSAKEY")
 
 	controller.DB = db.Init()

@@ -2,22 +2,54 @@ package authenticate
 
 import (
 	"bufio"
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
 	"dummy/model"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"logger"
 	"math/big"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 var PrivKey *rsa.PrivateKey
 var PubKey *rsa.PublicKey
 var PublicServerKey rsa.PublicKey
+var maxInt *big.Int = big.NewInt(9223372036854775807)
+
+func EncryptNonce(nonce int64) string {
+	non := strconv.FormatInt(nonce, 10)
+	msg := []byte(non)
+	sha1hash := sha1.New()
+
+	encryptedmsg, err := rsa.EncryptOAEP(sha1hash, rand.Reader, &PublicServerKey, msg, nil)
+	if err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(encryptedmsg)
+
+}
+
+func HashAndSign(un, did, non string) string {
+	str := un + "" + did + "" + non
+	sh := sha1.New()
+	hash := sh.Sum([]byte(str))
+	bytes, err := rsa.SignPKCS1v15(rand.Reader, PrivKey, crypto.SHA1, hash)
+	if err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(bytes)
+}
+
+func GenNonce() (*big.Int, error) {
+	return rand.Int(rand.Reader, maxInt)
+}
 
 func Password(password, salt, hash string) bool {
 	hasher := sha1.New()
@@ -56,7 +88,6 @@ func LoadPubKey() {
 		logger.WARN("Error wans't nil")
 		panic(err)
 	}
-	logger.INFO(pk.N)
 	PublicServerKey.N = big.NewInt(0)
 	_, _ = PublicServerKey.N.SetString(pk.N, 10)
 	PublicServerKey.E = pk.E

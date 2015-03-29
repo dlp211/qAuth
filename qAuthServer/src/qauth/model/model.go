@@ -5,8 +5,14 @@ import (
 	"io"
 )
 
+type Request struct {
+	Package  string
+	Nonce    string
+	DeviceID string
+}
+
 type TestPayload struct {
-	Payload string `json:payload`
+	Payload string `json:"payload"`
 }
 
 func (reg *TestPayload) Decode(r io.Reader) error {
@@ -14,9 +20,12 @@ func (reg *TestPayload) Decode(r io.Reader) error {
 }
 
 type ServiceRequest struct {
-	Username string `json:username`
-	DeviceId string `json:deviceid`
-	Nonce    int    `json:nonce`
+	Package  string `json:"package"`
+	Username string `json:"username"`
+	DeviceId string `json:"deviceid"`
+	Nonce    string `json:"nonce"`
+	NonceEnc string `json:"nonceEnc"`
+	Hash     string `json:"hash"`
 }
 
 func (req *ServiceRequest) Decode(r io.Reader) error {
@@ -32,9 +41,9 @@ func (req *ClientAuth) Decode(r io.Reader) error {
 }
 
 type AddPackage struct {
-	Package          string `json:package`
-	UserName         string `json:email`
-	ProviderUserName string `json:username`
+	Package          string `json:"package"`
+	UserName         string `json:"email"`
+	ProviderUserName string `json:"username"`
 }
 
 func (reg *AddPackage) Decode(r io.Reader) error {
@@ -98,4 +107,18 @@ type PublicKey struct {
 
 func (pk *PublicKey) Marshal() ([]byte, error) {
 	return json.Marshal(pk)
+}
+
+type Data struct {
+	MessageId string `json:"messageID"`
+	Package   string `json:"package"`
+}
+
+type GcmMessage struct {
+	RegIds []string `json:"registration_ids"`
+	Data   Data     `json:"data"`
+}
+
+func (msg *GcmMessage) Marshal() ([]byte, error) {
+	return json.Marshal(msg)
 }

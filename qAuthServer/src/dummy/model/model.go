@@ -3,7 +3,32 @@ package model
 import (
 	"encoding/json"
 	"io"
+	"time"
 )
+
+type Request struct {
+	UserName string
+	Nonce    int64
+	DeviceId string
+}
+
+type Session struct {
+	Username   string
+	Expiration time.Time
+}
+
+type AuthRequest struct {
+	Package  string `json:"package"`
+	UserName string `json:"username"`
+	DeviceId string `json:"deviceid"`
+	Nonce    string `json:"nonce"`
+	NonceEnc string `json:"nonceEnc"`
+	Hash     string `json:"hash"`
+}
+
+func (auth *AuthRequest) Marshal() ([]byte, error) {
+	return json.Marshal(auth)
+}
 
 type Login struct {
 	UserName string `json:"username"`
@@ -57,4 +82,13 @@ type RegisterProvider struct {
 
 func (reg *RegisterProvider) Marshal() ([]byte, error) {
 	return json.Marshal(reg)
+}
+
+type Data struct {
+	Gpa       float32 `json:"gpa"`
+	SessionId string  `json:"sessionid"`
+}
+
+func (d *Data) Marshal() ([]byte, error) {
+	return json.Marshal(d)
 }

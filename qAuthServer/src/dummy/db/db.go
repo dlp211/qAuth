@@ -5,6 +5,7 @@ import ()
 type User struct {
 	Password  string
 	Salt      string
+	GPA       float32
 	TwoFactor bool
 }
 
@@ -18,10 +19,11 @@ func Init() *Tables {
 	return &DB
 }
 
-func (DB *Tables) CreateUser(userName, hashedPW, salt string, twoFactor bool) {
+func (DB *Tables) CreateUser(userName, hashedPW, salt string, gpa float32, twoFactor bool) {
 	DB.Users[userName] = User{
 		hashedPW,
 		salt,
+		gpa,
 		twoFactor,
 	}
 }
