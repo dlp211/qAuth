@@ -131,13 +131,13 @@ func ValidateRequest(req *model.ServiceRequest, DB *db.Tables) (*db.Provider, bo
 	return &db.Provider{}, false
 }
 
-func IncNonce(nonce string) string {
+func IncNonce(nonce string, val int64) string {
 	non, _ := strconv.ParseInt(nonce, 10, 64)
-	non++
+	non += val
 	return strconv.FormatInt(non, 10)
 }
 
-func EncryptNonce(non string, pk *rsa.PublicKey) string {
+func Encrypt(non string, pk *rsa.PublicKey) string {
 	msg := []byte(non)
 	sha1hash := sha1.New()
 	encryptedmsg, err := rsa.EncryptOAEP(sha1hash, rand.Reader, pk, msg, nil)

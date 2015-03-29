@@ -15,7 +15,6 @@ import (
 )
 
 var Controllers = map[string]func(http.ResponseWriter, *http.Request){}
-var REQUESTID = ""
 var DB *db.Tables
 
 var request model.Request
@@ -251,8 +250,8 @@ func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest,
 	_, _ = pk.N.SetString(user.Pk.N, 10)
 	pk.E = user.Pk.E
 
-	nonce := authenticate.IncNonce(auth.Nonce)
-	nonceenc := authenticate.EncryptNonce(nonce, &pk)
+	nonce := authenticate.IncNonce(auth.Nonce, 1)
+	nonceenc := authenticate.Encrypt(nonce, &pk)
 	hash := authenticate.HashAndSign(auth.Package, auth.DeviceId, nonceenc)
 
 	msg := model.GcmMessage{
@@ -264,6 +263,7 @@ func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest,
 			nonce,
 			nonceenc,
 			hash,
+			model.TokenResult{},
 		},
 	}
 	js, err := msg.Marshal()
@@ -303,6 +303,7 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request = model.Request{
+		auth.Package,
 		auth.Username,
 		auth.Nonce,
 		auth.DeviceId,
@@ -326,22 +327,67 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 	}
 	if auth.Auth == 1 {
 		logger.DEBUG("AUTHENTICATED")
-		//send tokens
-		token1, token2 := "123456", "654321"
-		sendGcmMessage2(REQUESTID, token1, token2)
-		callBackProvider(token1, token2)
+		token1, token2 := authenticate.GenTokens()
+
+		prov := DB.Providers[request.Package]
+		user := DB.Users[request.UserName]
+
+		var pk rsa.PublicKey
+		pk.N = big.NewInt(0)
+		_, _ = pk.N.SetString(prov.Pk.N, 10)
+		pk.E = prov.Pk.E
+
+		tk1 := authenticate.Encrypt(token1.String(), &pk)
+		tk2 := authenticate.Encrypt(token2.String(), &pk)
+		non := authenticate.IncNonce(request.Nonce, 3)
+		hash := authenticate.HashAndSign(tk1, tk2, non)
+		pkg := model.TokenResult{
+			tk1,
+			tk2,
+			non,
+			authenticate.Encrypt(non, &pk),
+			hash,
+		}
+
+		pk.N.SetString(user.Pk.N, 10)
+		pk.E = user.Pk.E
+
+		callBackProvider(&prov, &pkg)
+
+		tk1 = authenticate.Encrypt(token1.String(), &pk)
+		tk2 = authenticate.Encrypt(token2.String(), &pk)
+		hash = authenticate.HashAndSign(tk1, tk2, non)
+		gcm := model.GcmMessage{
+			user.GCMId,
+			model.Data{
+				"1",
+				"",
+				"",
+				"",
+				"",
+				"",
+				model.TokenResult{
+					tk1,
+					tk2,
+					non,
+					authenticate.Encrypt(non, &pk),
+					hash,
+				},
+			},
+		}
+
+		sendGcmMessage2(&user, &gcm)
 	} else {
 		logger.DEBUG("FAILED")
 	}
 }
 
-func sendGcmMessage2(gcmid, token1, token2 string) {
-	logger.DEBUG("SEND GCM MESSAGE")
+func sendGcmMessage2(user *db.User, gcm *model.GcmMessage) {
 	url := "https://android.googleapis.com/gcm/send"
 
-	var jsonStr = []byte(`{"registration_ids":["` + gcmid + `"], "data" : { "messageID":"1", "token1":"` + token1 + `", "token2":"` + token2 + `"}}`)
+	js, _ := gcm.Marshal()
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("project_id", "156110196668")
 	req.Header.Set("Authorization", "key=AIzaSyAFqyh9ZZFiY8HRcyUlidAg7IT3rvoN-Pk")
@@ -357,14 +403,11 @@ func sendGcmMessage2(gcmid, token1, token2 string) {
 	logger.DEBUG("response: " + string(body))
 }
 
-func callBackProvider(token1, token2 string) {
-	//TODO: Implement this
-	logger.DEBUG("SEND CALLBACK")
-	url := "http://107.170.156.222:8081/qauth/callback"
+func callBackProvider(prov *db.Provider, result *model.TokenResult) {
+	url := prov.Callback
 
-	var jsonStr = []byte(`{"token1":"` + token1 + `", "token2":"` + token2 + `"}`)
-	logger.DEBUG(string(jsonStr))
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	js, _ := result.Marshal()
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -376,10 +419,8 @@ func callBackProvider(token1, token2 string) {
 
 	logger.INFO(fmt.Sprintf("response Status:", resp.Status))
 	logger.INFO(fmt.Sprintf("response Headers:", resp.Header))
-
 	body, _ := ioutil.ReadAll(resp.Body)
-	logger.INFO(fmt.Sprintf("*ANDROID POST* response: ", string(body)))
-
+	logger.INFO(fmt.Sprintf("response Body: ", string(body)))
 }
 
 func PublicKey(w http.ResponseWriter, r *http.Request) {

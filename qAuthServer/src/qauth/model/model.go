@@ -7,6 +7,7 @@ import (
 
 type Request struct {
 	Package  string
+	UserName string
 	Nonce    string
 	DeviceID string
 }
@@ -110,12 +111,13 @@ func (pk *PublicKey) Marshal() ([]byte, error) {
 }
 
 type Data struct {
-	MessageId string `json:"messageID"`
-	Package   string `json:"package"`
-	DeviceId  string `json:"deviceid"`
-	Nonce     string `json:"nonce"`
-	NonceEnc  string `json:"nonceEnc"`
-	Hash      string `json:"hash"`
+	MessageId   string      `json:"messageID"`
+	Package     string      `json:"package"`
+	DeviceId    string      `json:"deviceid"`
+	Nonce       string      `json:"nonce"`
+	NonceEnc    string      `json:"nonceEnc"`
+	Hash        string      `json:"hash"`
+	TokenResult TokenResult `json:"tokenResult"`
 }
 
 type GcmMessage struct {
@@ -125,4 +127,16 @@ type GcmMessage struct {
 
 func (msg *GcmMessage) Marshal() ([]byte, error) {
 	return json.Marshal(msg)
+}
+
+type TokenResult struct {
+	Token1   string `json:"token1"`
+	Token2   string `json:"token2"`
+	Nonce    string `json:"nonce"`
+	NonceEnc string `json:"nonceEnc"`
+	Hash     string `json:"hash"`
+}
+
+func (tk *TokenResult) Marshal() ([]byte, error) {
+	return json.Marshal(tk)
 }
