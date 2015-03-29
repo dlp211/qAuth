@@ -36,10 +36,15 @@ func EncryptNonce(nonce int64) string {
 
 }
 
-func HashAndSign(un, did, non string) string {
+func Hash(un, did, non string) []byte {
 	str := un + "" + did + "" + non
 	sh := sha1.New()
 	hash := sh.Sum([]byte(str))
+	return hash
+}
+
+func HashAndSign(un, did, non string) string {
+	hash := Hash(un, did, non)
 	bytes, err := rsa.SignPKCS1v15(rand.Reader, PrivKey, crypto.SHA1, hash)
 	if err != nil {
 		panic(err)
@@ -117,4 +122,27 @@ func LoadPrivKey(env string) *rsa.PrivateKey {
 		panic(err)
 	}
 	return privKey
+}
+
+func ValidateCallbackResult(result *model.CallbackResult) bool {
+	sha1hash := sha1.New()
+	bytes, _ := hex.DecodeString(result.NonceEnc)
+	signature, _ := hex.DecodeString(result.Hash)
+	nonce, err := rsa.DecryptOAEP(sha1hash, rand.Reader, PrivKey, bytes, nil)
+	if err != nil {
+		panic(err)
+	}
+	if string(nonce) != result.Nonce {
+		logger.WARN("something is wrong")
+		logger.WARN("expected:" + result.Nonce)
+		logger.WARN("got: " + string(nonce))
+		return false
+	}
+	hash := Hash(result.Token1, result.Token2, result.NonceEnc)
+	err = rsa.VerifyPKCS1v15(&PublicServerKey, crypto.SHA1, hash, []byte(signature))
+	if err != nil {
+		logger.WARN("DIDN'T VERIFY")
+		return false
+	}
+	return true
 }

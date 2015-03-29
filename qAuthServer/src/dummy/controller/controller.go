@@ -14,7 +14,6 @@ import (
 )
 
 var Controllers = map[string]func(http.ResponseWriter, *http.Request){}
-var tokenSet model.Tokens
 var DB *db.Tables
 var Package = "qauth.djd.dummyclient"
 
@@ -76,7 +75,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					panic(err)
 				}
-				request = model.Request{login.UserName, nonce.Int64(), login.DeviceId}
+				request = model.Request{login.UserName, user.GPA, nonce.Int64(), login.DeviceId, "", ""}
 				launchTwoFactor(login.UserName, login.DeviceId)
 				w.WriteHeader(http.StatusAccepted)
 			} else {
@@ -102,13 +101,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func Callback(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/callback")
-	var tokens model.Tokens
-	err := tokens.Decode(r.Body)
+	var res model.CallbackResult
+	err := res.Decode(r.Body)
 	if err != nil {
 		panic(err)
 	}
-	logger.DEBUG(tokens.Token1 + " " + tokens.Token2)
-	tokenSet = tokens
+	if ok := authenticate.ValidateCallbackResult(&res); ok {
+		nonce, _ := strconv.ParseInt(res.Nonce, 10, 64)
+		if nonce == request.Nonce {
+			request.Token1 = res.Token1
+			request.Token2 = res.Token2
+		}
+	}
 }
 
 func TwoFactor(w http.ResponseWriter, r *http.Request) {
@@ -118,12 +122,11 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if token.Token == tokenSet.Token1 {
-		logger.DEBUG("WORKS")
+	if token.Token == request.Token1 {
+		Session["GFEDCBA"] = model.Session{request.UserName, time.Now().Add(time.Minute * 30)}
 
-		//start a session
-		token = model.Token{tokenSet.Token2}
-		js, err := token.Marshal()
+		twRes := model.TwofactorResult{request.Token2, model.Data{request.Gpa, "GFEDCBA"}}
+		js, err := twRes.Marshal()
 		if err != nil {
 			panic(err)
 		}

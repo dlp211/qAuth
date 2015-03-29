@@ -8,8 +8,11 @@ import (
 
 type Request struct {
 	UserName string
+	Gpa      float32
 	Nonce    int64
 	DeviceId string
+	Token1   string
+	Token2   string
 }
 
 type Session struct {
@@ -40,24 +43,32 @@ func (reg *Login) Decode(r io.Reader) error {
 	return json.NewDecoder(r).Decode(&reg)
 }
 
-type Tokens struct {
-	Token1 string `json:"token1"`
-	Token2 string `json:"token2"`
+type CallbackResult struct {
+	Token1   string `json:"token1"`
+	Token2   string `json:"token2"`
+	Nonce    string `json:"nonce"`
+	NonceEnc string `json:nonceEnc`
+	Hash     string `json:"hash"`
 }
 
-func (reg *Tokens) Decode(r io.Reader) error {
-	return json.NewDecoder(r).Decode(&reg)
+func (res *CallbackResult) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&res)
 }
 
 type Token struct {
 	Token string `json:"token"`
 }
 
+type TwofactorResult struct {
+	Token string `json:"token"`
+	Data  Data   `json:"data"`
+}
+
 func (reg *Token) Decode(r io.Reader) error {
 	return json.NewDecoder(r).Decode(&reg)
 }
 
-func (reg *Token) Marshal() ([]byte, error) {
+func (reg *TwofactorResult) Marshal() ([]byte, error) {
 	return json.Marshal(reg)
 }
 
