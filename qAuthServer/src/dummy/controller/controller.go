@@ -14,10 +14,15 @@ import (
 )
 
 var Controllers = map[string]func(http.ResponseWriter, *http.Request){}
+
+//DB of users, no registration, current 2 users, 1FA and 2FA
 var DB *db.Tables
 var Package = "qauth.djd.dummyclient"
 
+// Holds a single request for 2FA (current limitation)
 var request model.Request
+
+// Holds all the sessions, clients must pass sessionID string in order to continue authentication
 var Session map[string]model.Session
 
 func WebRequest(protocol, url string, js []byte) {
@@ -37,6 +42,9 @@ func WebRequest(protocol, url string, js []byte) {
 	logger.INFO(fmt.Sprintf("response Body: ", string(body)))
 }
 
+/*
+ * Helper function to get 2FA started for a given client
+ */
 func launchTwoFactor(username, deviceid string) {
 	url := "http://107.170.156.222:8080/authenticate"
 
@@ -59,6 +67,14 @@ func launchTwoFactor(username, deviceid string) {
 	WebRequest("POST", url, js)
 }
 
+/*
+ * Main Entry Point for a User
+ * Scenarios:
+ *  1: User Authenticates
+ *  2: User Needs 2FA
+ *  3: User is not in DB
+ *  4: User entered wrong Password
+ */
 func Login(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/login")
 	var login model.Login
@@ -67,7 +83,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	logger.DEBUG(login.UserName + " " + login.Password + " " + login.DeviceId)
 	if user, ok := DB.Users[login.UserName]; ok {
 		if authenticate.Password(login.Password, user.Salt, user.Password) {
 			if user.TwoFactor {
@@ -99,6 +114,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+ * This is the endpoint that qAuth hits with its tokens
+ * Check that nonce == nonce + 3
+ */
 func Callback(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/callback")
 	var res model.CallbackResult
@@ -106,15 +125,18 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if ok := authenticate.ValidateCallbackResult(&res); ok {
-		nonce, _ := strconv.ParseInt(res.Nonce, 10, 64)
-		if nonce == request.Nonce {
-			request.Token1 = res.Token1
-			request.Token2 = res.Token2
+	if nonce, ok := authenticate.ValidateCallbackResult(&res); ok {
+		if nonce-3 == request.Nonce {
+			request.Token1 = authenticate.Decrypt(res.Token1)
+			request.Token2 = authenticate.Decrypt(res.Token2)
 		}
 	}
 }
 
+/*
+ * This is the callback for the qAuth client
+ * If the returned token matches, start a session and return our token
+ */
 func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/login/twofactor")
 	var token model.Token

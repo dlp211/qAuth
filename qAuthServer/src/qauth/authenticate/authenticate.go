@@ -131,6 +131,30 @@ func ValidateRequest(req *model.ServiceRequest, DB *db.Tables) (*db.Provider, bo
 	return &db.Provider{}, false
 }
 
+func ValidateClientAuthroization(auth *model.ClientAuth, pk *rsa.PublicKey) bool {
+	sha1hash := sha1.New()
+	bytes, _ := hex.DecodeString(auth.NonceEnc)
+	signature, _ := hex.DecodeString(auth.Hash)
+	authorized := auth.Auth == 1
+
+	nonce, err := rsa.DecryptOAEP(sha1hash, rand.Reader, PrivKey, bytes, nil)
+	if err != nil {
+		panic(err)
+	}
+	if string(nonce) != auth.Nonce {
+		logger.WARN("something is wrong")
+		logger.WARN("expected:" + auth.Nonce)
+		logger.WARN("got: " + string(nonce))
+	}
+	hash := Hash(strconv.Itoa(auth.Auth), auth.Nonce, auth.NonceEnc)
+	err = rsa.VerifyPKCS1v15(pk, crypto.SHA1, hash, []byte(signature))
+	if err != nil {
+		logger.WARN("DIDN'T VERIFY")
+		return false
+	}
+	return true && authorized
+}
+
 func IncNonce(nonce string, val int64) string {
 	non, _ := strconv.ParseInt(nonce, 10, 64)
 	non += val

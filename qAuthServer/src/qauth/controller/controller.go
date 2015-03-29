@@ -17,9 +17,14 @@ import (
 var Controllers = map[string]func(http.ResponseWriter, *http.Request){}
 var DB *db.Tables
 
+//Holds a single request
 var request model.Request
 
 /* USER REGISTRATION CONTROLLERS */
+
+/*
+ * Endpoint for a user to register with qAuth
+ */
 func Register(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/register")
 	var reg model.Registration
@@ -39,6 +44,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+ * Register a single Bluetooth device that will store your key
+ */
 func RegisterBluetoothID(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/register/bluetooth")
 	var reg model.RegisterBT
@@ -93,6 +101,14 @@ func AddDevice(w http.ResponseWriter, r *http.Request) {
 }
 
 /* PROVIDER REGISTRATION CONTROLLERS */
+
+/*
+ * Add a provider
+ * Scenarios:
+ *  1. Provider is already registered
+ *  2. Provider isn't registered and we register them
+ *  This is incomplete but works for demo
+ */
 func AddProvider(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/provider")
 	var provider model.RegisterProvider
@@ -230,6 +246,7 @@ func DisplayProviderDB(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*Test RSA functionality*/
 func TestRSA(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/test")
 	var payload model.TestPayload
@@ -242,6 +259,14 @@ func TestRSA(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+/////////////////////////////////////////////////
+//2FA functions below
+////////////////////////////////////////////////
+
+/*
+ * Helper function to send a GCMMessage
+ * Should be able to combine with other function
+ */
 func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest, user *db.User) {
 	url := "https://android.googleapis.com/gcm/send"
 
@@ -258,11 +283,13 @@ func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest,
 		[]string{gcmid},
 		model.Data{
 			"0",
+			user.BluetoothId,
 			auth.Package,
 			auth.DeviceId,
 			nonce,
 			nonceenc,
 			hash,
+			"",
 			model.TokenResult{},
 		},
 	}
@@ -287,6 +314,9 @@ func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest,
 	logger.DEBUG("response: " + string(body))
 }
 
+/*
+ * Entry Point for 2FA
+ */
 func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/authenticate")
 	var auth model.ServiceRequest
@@ -294,7 +324,6 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	logger.DEBUG(auth.Username + " " + auth.DeviceId + " ")
 
 	prov, ok := authenticate.ValidateRequest(&auth, DB)
 	if !ok {
@@ -309,15 +338,16 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 		auth.DeviceId,
 	}
 	if user, ok := DB.Users[auth.Username]; ok {
-		logger.DEBUG("HERE" + user.GCMId[0])
 		sendGcmMessage(user.GCMId[0], prov, &auth, &user)
 		w.WriteHeader(http.StatusOK)
 	} else {
-		logger.DEBUG("user not found")
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
 
+/*
+ * Callback for our client
+ */
 func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/client/authenticate")
 	var auth model.ClientAuth
@@ -325,15 +355,18 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if auth.Auth == 1 {
-		logger.DEBUG("AUTHENTICATED")
+
+	prov := DB.Providers[request.Package]
+	user := DB.Users[request.UserName]
+
+	var pk rsa.PublicKey
+	pk.N = big.NewInt(0)
+	_, _ = pk.N.SetString(user.Pk.N, 10)
+	pk.E = user.Pk.E
+
+	if authenticate.ValidateClientAuthroization(&auth, &pk) {
 		token1, token2 := authenticate.GenTokens()
 
-		prov := DB.Providers[request.Package]
-		user := DB.Users[request.UserName]
-
-		var pk rsa.PublicKey
-		pk.N = big.NewInt(0)
 		_, _ = pk.N.SetString(prov.Pk.N, 10)
 		pk.E = prov.Pk.E
 
@@ -366,6 +399,8 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 				"",
 				"",
 				"",
+				"",
+				prov.TwoFactor,
 				model.TokenResult{
 					tk1,
 					tk2,
@@ -382,6 +417,9 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+ * Combine with other GCM func
+ */
 func sendGcmMessage2(user *db.User, gcm *model.GcmMessage) {
 	url := "https://android.googleapis.com/gcm/send"
 
@@ -403,6 +441,9 @@ func sendGcmMessage2(user *db.User, gcm *model.GcmMessage) {
 	logger.DEBUG("response: " + string(body))
 }
 
+/*
+ * Used to return a request to the provider
+ */
 func callBackProvider(prov *db.Provider, result *model.TokenResult) {
 	url := prov.Callback
 
@@ -423,6 +464,7 @@ func callBackProvider(prov *db.Provider, result *model.TokenResult) {
 	logger.INFO(fmt.Sprintf("response Body: ", string(body)))
 }
 
+/* Helper endpoint to get the servers public key */
 func PublicKey(w http.ResponseWriter, r *http.Request) {
 	pk := model.PublicKey{
 		authenticate.PubKey.N.String(),
