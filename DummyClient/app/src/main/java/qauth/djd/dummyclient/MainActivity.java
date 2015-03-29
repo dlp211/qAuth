@@ -37,29 +37,21 @@ import java.io.UnsupportedEncodingException;
 import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
-
+import android.provider.Settings.Secure;
 
 public class MainActivity extends ActionBarActivity {
 
     static TextView tv3;
+    private static String deviceID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        deviceID = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
         Intent intent = getIntent();
         tv3 = (TextView) findViewById(R.id.textView3);
-
-        /*
-        try {
-            if ( intent.getExtras().getString("qauthToken") != null ){
-                tv3.setText( "qauthToken: " + intent.getExtras().getString("qauthToken") );
-                new TwoFactorTask( intent.getExtras().getString("qauthToken"), "1" ).execute();
-            }
-        } catch (Exception e){
-            Log.i("exception", "exception: " + e);
-        }*/
     }
 
 
@@ -85,18 +77,10 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /*
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            Log.i("result", "WAS OKKKKKKKKKKKKK");
-        }
-    }*/
-
-    public void clickLogin( View v ){
+    public void clickLogin( final View v ){
         String username = ((EditText)findViewById(R.id.userName)).getText().toString();
         String password = ((EditText)findViewById(R.id.password)).getText().toString();
-        new LoginTask( username, password, "123" ).execute();
+        new LoginTask( username, password, this.deviceID ).execute();
 
         Intent intent = getPackageManager().getLaunchIntentForPackage("qauth.djd.qauthclient");
         intent.putExtra("packageName", "qauth.djd.dummyclient");
@@ -158,6 +142,7 @@ public class MainActivity extends ActionBarActivity {
             this.password = password;
             this.deviceid = deviceid;
         }
+        
         @Override
         protected String doInBackground(String... params) {
             Map<String, String> map = new HashMap<String, String>();

@@ -99,7 +99,7 @@ func AddProvider(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if _, ok := DB.Providers[provider.Provider]; ok {
+	if _, ok := DB.Providers[provider.Package]; ok {
 		logger.WARN("Provider " + provider.Provider + " attempted to reregister")
 		w.WriteHeader(http.StatusConflict)
 	} else {
