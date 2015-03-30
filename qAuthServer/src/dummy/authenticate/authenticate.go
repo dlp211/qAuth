@@ -48,13 +48,14 @@ func EncryptNonce(nonce int64) string {
 
 func Hash(un, did, non string) []byte {
 	str := un + "" + did + "" + non
-	sh := sha1.New()
+	sh := crypto.SHA1.New()
 	hash := sh.Sum([]byte(str))
 	return hash
 }
 
 func HashAndSign(un, did, non string) string {
 	hash := Hash(un, did, non)
+	logger.DEBUG(string(hash))
 	bytes, err := rsa.SignPKCS1v15(rand.Reader, PrivKey, crypto.SHA1, hash)
 	if err != nil {
 		panic(err)
