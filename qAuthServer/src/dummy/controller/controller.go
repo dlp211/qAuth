@@ -23,7 +23,7 @@ var Package = "qauth.djd.dummyclient"
 var request model.Request
 
 // Holds all the sessions, clients must pass sessionID string in order to continue authentication
-var Session map[string]model.Session
+var Session = map[string]model.Session{}
 
 func WebRequest(protocol, url string, js []byte) {
 	req, err := http.NewRequest(protocol, url, bytes.NewBuffer(js))
