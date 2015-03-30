@@ -174,6 +174,9 @@ func Encrypt(non string, pk *rsa.PublicKey) string {
 
 func HashAndSign(one, two, three string) string {
 	hash := Hash(one, two, three)
+	logger.DEBUG("")
+	logger.DEBUG(hex.EncodeToString(hash))
+	logger.DEBUG("")
 	bytes, err := rsa.SignPKCS1v15(rand.Reader, PrivKey, crypto.SHA1, hash)
 	if err != nil {
 		panic(err)
