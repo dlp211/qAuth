@@ -144,6 +144,8 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	logger.DEBUG(token.Token)
+	logger.DEBUG(request.Token1)
 	if token.Token == request.Token1 {
 		Session["GFEDCBA"] = model.Session{request.UserName, time.Now().Add(time.Minute * 30)}
 
