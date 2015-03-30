@@ -57,7 +57,7 @@ func RegisterBluetoothID(w http.ResponseWriter, r *http.Request) {
 	logger.DEBUG(reg.String())
 
 	if val, ok := DB.Users[reg.UserName]; ok {
-		if authenticate.Password(reg.Password, val.Salt, val.Password) {
+		if !authenticate.Password(reg.Password, val.Salt, val.Password) {
 			logger.WARN("User " + reg.UserName + " failed to authenticate")
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
