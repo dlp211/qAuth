@@ -6,9 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.Settings.Secure;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
@@ -45,23 +43,16 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.security.Key;
 import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.Security;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.crypto.Cipher;
-
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
 
     GifView gifView;
     private GoogleApiClient client;
@@ -103,28 +94,13 @@ public class MainActivity extends ActionBarActivity {
         tv2 = (TextView) findViewById(R.id.textView2);
         mDisplay = tv2;
 
-        // Check device for Play Services APK. If check succeeds, proceed with
-        //  GCM registration.
-        if (checkPlayServices()) {
-            gcm = GoogleCloudMessaging.getInstance(this);
-            regid = getRegistrationId(context);
-            Log.i(TAG, "regId: " + regid);
-
-            if (regid.isEmpty()) {
-                registerInBackground();
-            }
-        } else {
-            Log.i(TAG, "No valid Google Play Services APK found.");
-        }
-
-
         GifView gif_view = (GifView) findViewById(R.id.testGifView );
         gif_view.setGifImageResourceID(R.raw.green);
 
-        String android_id = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
-        Log.i(TAG, "android_id: " + android_id);
+        String deviceId = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
+        Log.i(TAG, "deviceId: " + deviceId);
 
-        try {
+        /*try {
 
             Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
             byte[] input = "abc".getBytes();
@@ -152,25 +128,27 @@ public class MainActivity extends ActionBarActivity {
 
         } catch (Exception e) {
 
-        }
+        }*/
 
+        /*
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
                 tv2.setText("Sending Watch Id");
 
             }
-        }, 2000);
+        }, 2000);*/
 
-        handler.postDelayed(new Runnable() {
+        /*handler.postDelayed(new Runnable() {
             public void run() {
                 tv2.setText("Retrieving Token");
+
             }
-        }, 3500);
+        }, 3500);*/
 
         Log.i(TAG, "logcat test");
 
-        new GetTokenTask("007").execute();
+        //new GetTokenTask("007").execute();
 
         /*
         handler.postDelayed(new Runnable() {
@@ -322,14 +300,30 @@ public class MainActivity extends ActionBarActivity {
         editor.commit();
     }
 
-    public void exit() {
+    public static void exit(String token1) {
 
-        Intent intent = getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
-        intent.putExtra("qauth", "hi from the qauth client");
-        startActivityForResult(intent, 1);
-        finish();
-        //setResult(Activity.RESULT_OK);
-        //finish();
+        Intent intent = ctx.getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
+        intent.putExtra("qauthToken", token1);
+        ctx.startActivity(intent);
+
+    }
+
+    public static void compareTokens() {
+
+        SharedPreferences prefs = ctx.getSharedPreferences("qauth.djd.qauthclient",Context.MODE_PRIVATE);
+        String QStoken = prefs.getString("QStoken", "QStoken");
+        String DStoken = prefs.getString("DStoken", "DStoken");
+
+        if ( QStoken.equals(DStoken) ){
+            tv2.setText("QStoken == DStoken");
+
+            Intent intent = ctx.getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
+            ctx.startActivity(intent);
+
+        } else {
+            tv2.setText("QStoken != DStoken");
+        }
+
     }
 
     private GoogleApiClient getGoogleApiClient(Context context) {

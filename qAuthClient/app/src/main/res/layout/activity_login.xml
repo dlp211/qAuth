@@ -1,0 +1,31 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/sample_main_layout">
+
+    <LinearLayout
+        android:id="@+id/topBanner"
+        android:layout_width="fill_parent"
+        android:layout_height="170dp"
+        android:background="#33B5E5" >
+
+        <TextView
+            android:id="@+id/tvAppName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="qAuth"
+            android:layout_gravity="center"
+            android:layout_marginLeft="125dp"
+            android:textSize="40dp" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/sample_content_fragment"
+        android:layout_weight="2"
+        android:layout_width="match_parent"
+        android:layout_height="0px" />
+
+</LinearLayout>

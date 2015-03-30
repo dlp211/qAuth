@@ -5,12 +5,15 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+
+import qauth.djd.qauthclient.POST.ClientAuthenticate;
+import qauth.djd.qauthclient.POST.LoginTwoFactor;
 
 /**
  * Created by David on 1/29/15.
@@ -39,6 +42,9 @@ public class GcmIntentService extends IntentService {
              * any message types you're not interested in, or that you don't
              * recognize.
              */
+
+            //Log.i("GcmIntentService", "Received: " + extras.toString());
+
             if (GoogleCloudMessaging.
                     MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
                 sendNotification("Send error: " + extras.toString());
@@ -50,14 +56,31 @@ public class GcmIntentService extends IntentService {
             } else if (GoogleCloudMessaging.
                     MESSAGE_TYPE_MESSAGE.equals(messageType)) {
 
-                //woken up
-                new MainActivity.GetTokenTask("007").execute();
 
-                Log.i("GcmIntentService", "Completed work @ " + SystemClock.elapsedRealtime());
+                //Log.i("GcmIntentService", "Completed work @ " + SystemClock.elapsedRealtime());
                 // Post notification of received message.
                 //sendNotification("Received: " + extras.toString());
                 Log.i("GcmIntentService", "Received: " + extras.toString());
+
+                String messageID = extras.getString("messageID");
+
+                if (messageID.equals("0")) {
+                    new ClientAuthenticate(1).execute();
+                } else if (messageID.equals("1")) {
+                    String token1 = extras.getString("token1");
+                    String token2 = extras.getString("token2");
+
+                    SharedPreferences prefs = getSharedPreferences("qauth.djd.qauthclient",Context.MODE_PRIVATE);
+                    prefs.edit().putString("QStoken", token2).commit();
+
+                    //MainActivity.exit(token1);
+                    new LoginTwoFactor(token1, "1", this).execute();
+
+
+                }
+
             }
+
         }
         // Release the wake lock provided by the WakefulBroadcastReceiver.
         GcmBroadcastReceiver.completeWakefulIntent(intent);
