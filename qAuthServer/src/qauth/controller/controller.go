@@ -300,6 +300,8 @@ func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest,
 	if err != nil {
 		panic(err)
 	}
+	logger.DEBUG("\n\n")
+	logger.DEBUG(string(js))
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
 	req.Header.Set("Content-Type", "application/json")
