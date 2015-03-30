@@ -127,15 +127,19 @@ func (pk *PublicKey) Marshal() ([]byte, error) {
 
 // Data for GCM message, TODO: Add another data type to clean this up
 type Data struct {
-	MessageId   string      `json:"messageID"`
-	BluetoothId string      `json:"bluetoothId"`
-	Package     string      `json:"package"`
-	DeviceId    string      `json:"deviceid"`
-	Nonce       string      `json:"nonce"`
-	NonceEnc    string      `json:"nonceEnc"`
-	Hash        string      `json:"hash"`
-	Callback    string      `json:"callback"`
-	TokenResult TokenResult `json:"tokenResult"`
+	MessageId   string        `json:"messageID"`
+	Request     ClientRequest `json:"authRequest"`
+	Callback    string        `json:"callback"`
+	TokenResult TokenResult   `json:"tokenResult"`
+}
+
+type ClientRequest struct {
+	BluetoothId string `json:"bluetoothId"`
+	Package     string `json:"package"`
+	DeviceId    string `json:"deviceid"`
+	Nonce       string `json:"nonce"`
+	NonceEnc    string `json:"nonceEnc"`
+	Hash        string `json:"hash"`
 }
 
 type GcmMessage struct {
