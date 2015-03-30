@@ -16,7 +16,7 @@ func registerWithQAuth() {
 		"DummyServerService",
 		"ABCDEFG",
 		"qauth.djd.dummyclient",
-		"http://107.170.156.222:8081/callback",
+		"http://107.170.156.222:8081/qauth/callback",
 		"http://107.170.156.222:8081/login/twofactor",
 		authenticate.PubKey.N.String(),
 		authenticate.PubKey.E,
