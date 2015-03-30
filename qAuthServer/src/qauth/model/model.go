@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"io"
+	"strconv"
 )
 
 type Request struct {
@@ -74,8 +75,12 @@ type RegisterBT struct {
 	UserName    string `json:"email"`
 	Password    string `json:"password"`
 	BluetoothId string `json:"bluetoothId"`
-	PKN         string `json:"publicKey_n"`
-	PKE         int    `json:"publicKey_e"`
+	PKN         string `json:"N"`
+	PKE         int    `json:"E"`
+}
+
+func (reg *RegisterBT) String() string {
+	return reg.UserName + " " + reg.Password + " " + reg.BluetoothId + " " + reg.PKN + " " + strconv.Itoa(reg.PKE)
 }
 
 func (reg *RegisterBT) Decode(r io.Reader) error {

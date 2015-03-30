@@ -54,6 +54,7 @@ func RegisterBluetoothID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	logger.DEBUG(reg.String())
 
 	if val, ok := DB.Users[reg.UserName]; ok {
 		if authenticate.Password(reg.Password, val.Salt, val.Password) {
