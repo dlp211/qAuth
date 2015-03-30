@@ -178,5 +178,8 @@ func HashAndSign(one, two, three string) string {
 	if err != nil {
 		panic(err)
 	}
+	logger.DEBUG("")
+	logger.DEBUG(hex.EncodeToString(bytes))
+	logger.DEBUG("")
 	return hex.EncodeToString(bytes)
 }
