@@ -446,9 +446,12 @@ func sendGcmMessage2(user *db.User, gcm *model.GcmMessage) {
  * Used to return a request to the provider
  */
 func callBackProvider(prov *db.Provider, result *model.TokenResult) {
+	logger.DEBUG("callBackProvider")
 	url := prov.Callback
+	logger.DEBUG(url)
 
 	js, _ := result.Marshal()
+	logger.DEBUG(string(js))
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
 	req.Header.Set("Content-Type", "application/json")
 
