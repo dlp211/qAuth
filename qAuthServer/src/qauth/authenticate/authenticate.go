@@ -97,8 +97,9 @@ func LoadPrivKey(env string) *rsa.PrivateKey {
 
 func Hash(un, did, non string) []byte {
 	str := un + "" + did + "" + non
-	sh := sha1.New()
-	hash := sh.Sum([]byte(str))
+	sh := crypto.SHA1.New()
+	sh.Write([]byte(str))
+	hash := sh.Sum(nil)
 	return hash
 }
 
