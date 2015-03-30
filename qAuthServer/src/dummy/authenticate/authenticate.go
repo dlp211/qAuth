@@ -49,7 +49,8 @@ func EncryptNonce(nonce int64) string {
 func Hash(un, did, non string) []byte {
 	str := un + "" + did + "" + non
 	sh := crypto.SHA1.New()
-	hash := sh.Sum([]byte(str))
+	sh.Write([]byte(str))
+	hash := sh.Sum(nil)
 	return hash
 }
 
