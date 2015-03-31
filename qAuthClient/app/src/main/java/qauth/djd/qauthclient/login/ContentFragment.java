@@ -163,7 +163,7 @@ public class ContentFragment extends Fragment {
                         String deviceId = Settings.Secure.getString(getActivity().getContentResolver(), Settings.Secure.ANDROID_ID);
 
                         if (!email.equals("")) {
-                            new Register(email, v.getText().toString(), deviceId, getRegistrationId(context) ).execute();
+                            new Register(email, v.getText().toString(), deviceId, getRegistrationId(context), getActivity()).execute();
                         } else {
                             Toast.makeText(getActivity(), "Invalid email", Toast.LENGTH_SHORT).show();
                         }

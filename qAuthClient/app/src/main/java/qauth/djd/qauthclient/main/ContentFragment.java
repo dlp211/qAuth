@@ -316,7 +316,7 @@ public class ContentFragment extends Fragment implements MessageApi.MessageListe
                     );
                 }
 
-                new RegisterBluetooth("email", "password", watch.deviceId, "key 1", "key 2").execute();
+                new RegisterBluetooth("email", "password", watch.deviceId, "key 1", 0).execute();
 
 
             } else {

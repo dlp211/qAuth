@@ -56,7 +56,7 @@ public class MainActivity extends Activity {
 
     GifView gifView;
     private GoogleApiClient client;
-    static Context ctx;
+    public static Context ctx;
     static Activity act;
     static TextView tv2;
 

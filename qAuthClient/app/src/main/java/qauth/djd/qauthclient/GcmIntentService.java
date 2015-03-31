@@ -12,6 +12,8 @@ import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
+import org.json.JSONObject;
+
 import qauth.djd.qauthclient.POST.ClientAuthenticate;
 import qauth.djd.qauthclient.POST.LoginTwoFactor;
 
@@ -64,18 +66,81 @@ public class GcmIntentService extends IntentService {
 
                 String messageID = extras.getString("messageID");
 
-                if (messageID.equals("0")) {
-                    new ClientAuthenticate(1).execute();
-                } else if (messageID.equals("1")) {
-                    String token1 = extras.getString("token1");
-                    String token2 = extras.getString("token2");
+                if (messageID.equals("0")) { //authRequest
+
+                    String authRequest = extras.getString("authRequest");
+
+                    Log.i("authRequest", authRequest);
+                    //authRequest: { "bluetoothId", "package", "deviceid", "nonce", "nonceEnc", "hash" }
+
+                    String nonceEnc = "";
+                    String nonce = "";
+                    String packageName = "";
+                    String deviceId = "";
+                    String hash = "";
+                    int auth = 1;
+
+                    try {
+                        JSONObject json = new JSONObject(authRequest);
+                        nonceEnc = json.getString("nonceEnc");
+                        nonce = json.getString("nonce");
+                        packageName = json.getString("package");
+                        deviceId = json.getString("deviceid");
+                        hash = json.getString("hash");
+                    } catch (Exception e){}
+
+                    try {
+                        String nonceEnc2 = Authenticate.decrypt(nonceEnc);
+                        Log.i("authRequest", "decrypt(nonceEnc): " + nonceEnc2 );
+                        Log.i("authRequest", "nonce: " + nonce );
+
+                        Log.i("authRequest", "packageName: " + packageName );
+                        Log.i("authRequest", "deviceId: " + deviceId );
+                        Log.i("authRequest", "nonceEnc: " + nonceEnc );
+                        Log.i("authRequest", "hash: " + hash );
+
+                        if ( nonceEnc2.equals(nonce) ) {
+                            //TODO: fix verifySignature function
+                            //if ( Authenticate.verifySignature( hash, Authenticate.hash(packageName + deviceId + nonceEnc) ) ){
+                                // return json: { nonce, encrypt(nonce), auth, hash(auth+nonce+nonceEnc) }
+                                new ClientAuthenticate( nonce, Authenticate.encrypt(nonce), auth, Authenticate.hashAndSign(auth + nonce + nonceEnc)).execute();
+                            //} else {
+                                //Log.i("authRequest", "verifySignature FALSE");
+                            //}
+                        } else {
+                            Log.i("authRequest", "decrypt(nonceEnc) != nonce");
+                        }
+                    } catch (Exception e) {
+                        Log.i("GcmIntentService", e.toString());
+                    }
+                    //call decode on nonceEnc
+                    // -> compare to nonce
+                    // if ==, cont.
+                    //
+                    //  call verifySig( hash(package+deviceId+nonceEnc), hash )
+                    // -> if true
+
+
+
+                } else if (messageID.equals("1")) { //tokenResult & callback
+
+                    String token1 = "";
+                    String token2 = "";
+
+                    try {
+                        JSONObject json = new JSONObject(extras.getString("tokenResult"));
+                        String token1Enc = json.getString("token1");
+                        String token2Enc = json.getString("token2");
+
+                        token1 = Authenticate.decrypt(token1Enc);
+                        token2 = Authenticate.decrypt(token2Enc);
+
+                    } catch (Exception e){ Log.i("tokenResult&callback", e.toString());}
 
                     SharedPreferences prefs = getSharedPreferences("qauth.djd.qauthclient",Context.MODE_PRIVATE);
                     prefs.edit().putString("QStoken", token2).commit();
 
-                    //MainActivity.exit(token1);
                     new LoginTwoFactor(token1, "1", this).execute();
-
 
                 }
 
