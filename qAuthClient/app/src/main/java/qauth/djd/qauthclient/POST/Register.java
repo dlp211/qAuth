@@ -1,6 +1,7 @@
 package qauth.djd.qauthclient.POST;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Base64;
 import android.util.Log;
@@ -30,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import qauth.djd.qauthclient.login.LoginActivity;
+import qauth.djd.qauthclient.main.MainTabsActivity;
 
 public class Register extends PostRequest {
 
@@ -75,6 +77,12 @@ public class Register extends PostRequest {
         //202 if successfully registered
 
         if ( result.equals("202") ) {
+
+            SharedPreferences prefs = ctx.getSharedPreferences(
+                    "qauth.djd.qauthclient",
+                    Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("loggedIn", true).commit();
+
             generate();
         } else if ( result.equals("409") ) {
 
@@ -152,6 +160,8 @@ public class Register extends PostRequest {
             // string N, int E
             String N = LoginActivity.pubKey.getModulus().toString(10); //N
             int E = LoginActivity.pubKey.getPublicExponent().intValue(); //E
+
+            ctx.startActivity(new Intent(ctx, MainTabsActivity.class));
 
             new RegisterBluetooth("dlp", "password", "1001", N, E).execute();
 

@@ -61,7 +61,7 @@ public class MainTabsActivity extends SampleActivityBase {
         SharedPreferences prefs = getSharedPreferences(
                 "qauth.djd.qauthclient",
                 Context.MODE_PRIVATE);
-        return prefs.getBoolean("firstLaunch",false);
+        return prefs.getBoolean("loggedIn",false);
     }
 
     @Override
