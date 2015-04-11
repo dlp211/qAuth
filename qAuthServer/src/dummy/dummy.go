@@ -41,7 +41,7 @@ func init() {
 	pw1, salt1 := authenticate.NewPWHash("password")
 	pw2, salt2 := authenticate.NewPWHash("password")
 	controller.DB.CreateUser("dlp", pw1, salt1, 10324.89, true)
-	controller.DB.CreateUser("djk", pw2, salt2, 232.54, false)
+	controller.DB.CreateUser("dgk", pw2, salt2, 232.54, false)
 
 	registerWithQAuth()
 

@@ -56,7 +56,7 @@ public class MainActivity extends Activity {
 
     GifView gifView;
     private GoogleApiClient client;
-    static Context ctx;
+    public static Context ctx;
     static Activity act;
     static TextView tv2;
 
@@ -318,6 +318,7 @@ public class MainActivity extends Activity {
             tv2.setText("QStoken == DStoken");
 
             Intent intent = ctx.getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
+            intent.putExtra("foundGPA", "3.996");
             ctx.startActivity(intent);
 
         } else {

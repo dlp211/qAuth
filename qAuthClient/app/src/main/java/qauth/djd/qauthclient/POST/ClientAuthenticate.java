@@ -3,7 +3,6 @@ package qauth.djd.qauthclient.POST;
 import android.util.Log;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
@@ -11,28 +10,55 @@ import org.apache.http.entity.StringEntity;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ClientAuthenticate extends PostRequest {
 
-    public int auth;
+    private static class ClientAuthenticateJson {
 
-    public ClientAuthenticate(
-            int auth){
+        private String nonce;
+        private String nonceEnc;
+        private int auth;
+        private String hash;
+
+        public ClientAuthenticateJson( String nonce, String nonceEnc, int auth, String hash ) {
+            this.nonce = nonce;
+            this.nonceEnc = nonceEnc;
+            this.auth = auth;
+            this.hash = hash;
+        }
+
+        @Override
+        public String toString() {
+            return "ClientAuthenticateJson [nonce=" + this.nonce + ", nonceEnc=" + this.nonceEnc + ", " +
+                    "auth=" + this.auth + ", hash=" + this.hash + "]";
+        }
+
+    }
+
+    private String nonce;
+    private String nonceEnc;
+    private int auth;
+    private String hash;
+
+    public ClientAuthenticate(String nonce, String nonceEnc, int auth, String hash){
+        this.nonce = nonce;
+        this.nonceEnc = nonceEnc;
         this.auth = auth;
+        this.hash = hash;
     }
 
     @Override
     protected String doInBackground(Void... params) {
 
-        Gson gson = new GsonBuilder().create();
-        Map<String, Integer> mapJson = new HashMap<String, Integer>();
-        mapJson.put("auth", this.auth);
-        String json = gson.toJson(mapJson, Map.class);
+        ClientAuthenticateJson caJson = new ClientAuthenticateJson(this.nonce, this.nonceEnc, this.auth, this.hash);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(caJson);
+
         try {
-            //Log.i("Register", "auth: " + this.auth );
-            Log.i("Register", "sent json: " + json );
+            // return json: { nonce, encrypt(nonce), auth, hash(auth+nonce+nonceEnc) }
+
+            Log.i("ClientAuthenticate", "sent json: " + json );
             return String.valueOf(makeRequestForStatusCode("http://107.170.156.222:8080/client/authenticate", json));
         } catch (IllegalStateException e) {
             // TODO Auto-generated catch block
@@ -43,7 +69,7 @@ public class ClientAuthenticate extends PostRequest {
     }
 
     protected void onPostExecute(String result) {
-        Log.i("Register result", "response: " + result);
+        Log.i("ClientAuthenticate result", "response: " + result);
 
         //202 if successfully registered
         //409 is already registered
