@@ -175,6 +175,7 @@ func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	if session, ok := Session[update.SessionId]; ok {
 		if !session.Expiration.After(time.Now()) {
+			delete(Session, update.SessionId)
 			w.WriteHeader(http.StatusGone)
 			return
 		}
@@ -233,6 +234,7 @@ func LoginSession(w http.ResponseWriter, r *http.Request) {
 	}
 	if session, ok := Session[login.SessionId]; ok {
 		if !session.Expiration.After(time.Now()) {
+			delete(Session, login.SessionId)
 			w.WriteHeader(http.StatusGone)
 			return
 		}
