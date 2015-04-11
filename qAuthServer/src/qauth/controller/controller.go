@@ -276,7 +276,7 @@ func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest,
 	_, _ = pk.N.SetString(user.Pk.N, 10)
 	pk.E = user.Pk.E
 
-	nonce := authenticate.IncNonce(auth.Nonce, 1)
+	nonce := authenticate.IncNonce(authenticate.DecryptNonce(auth.NonceEnc), 1)
 	nonceenc := authenticate.Encrypt(nonce, &pk)
 	hash := authenticate.HashAndSign(auth.Package, auth.DeviceId, nonceenc)
 
@@ -288,7 +288,6 @@ func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest,
 				user.BluetoothId,
 				auth.Package,
 				auth.DeviceId,
-				nonce,
 				nonceenc,
 				hash,
 			},
@@ -340,7 +339,7 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	request = model.Request{
 		auth.Package,
 		auth.Username,
-		auth.Nonce,
+		authenticate.DecryptNonce(auth.NonceEnc),
 		auth.DeviceId,
 	}
 	if user, ok := DB.Users[auth.Username]; ok {
@@ -383,7 +382,6 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 		pkg := model.TokenResult{
 			tk1,
 			tk2,
-			non,
 			authenticate.Encrypt(non, &pk),
 			hash,
 		}
@@ -405,7 +403,6 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 				model.TokenResult{
 					tk1,
 					tk2,
-					non,
 					authenticate.Encrypt(non, &pk),
 					hash,
 				},

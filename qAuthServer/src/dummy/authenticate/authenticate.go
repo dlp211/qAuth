@@ -149,26 +149,24 @@ func LoadPrivKey(env string) *rsa.PrivateKey {
 	return privKey
 }
 
-func ValidateCallbackResult(result *model.CallbackResult) (int64, bool) {
+func DecryptNonce(nonceEnc string) string {
 	sha1hash := sha1.New()
-	bytes, _ := hex.DecodeString(result.NonceEnc)
-	signature, _ := hex.DecodeString(result.Hash)
+	bytes, _ := hex.DecodeString(nonceEnc)
 	nonce, err := rsa.DecryptOAEP(sha1hash, rand.Reader, PrivKey, bytes, nil)
 	if err != nil {
 		panic(err)
 	}
-	if string(nonce) != result.Nonce {
-		logger.WARN("something is wrong")
-		logger.WARN("expected:" + result.Nonce)
-		logger.WARN("got: " + string(nonce))
-		return 0, false
-	}
+	return string(nonce)
+}
+
+func ValidateCallbackResult(result *model.CallbackResult) (int64, bool) {
+	signature, _ := hex.DecodeString(result.Hash)
 	hash := Hash(result.Token1, result.Token2, result.NonceEnc)
-	err = rsa.VerifyPKCS1v15(&PublicServerKey, crypto.SHA1, hash, []byte(signature))
+	err := rsa.VerifyPKCS1v15(&PublicServerKey, crypto.SHA1, hash, []byte(signature))
 	if err != nil {
 		logger.WARN("DIDN'T VERIFY")
 		return 0, false
 	}
-	val, _ := strconv.ParseInt(string(nonce), 64, 10)
+	val, _ := strconv.ParseInt(DecryptNonce(result.NonceEnc), 64, 10)
 	return val, true
 }

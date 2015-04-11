@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"logger"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -53,7 +52,6 @@ func launchTwoFactor(username, deviceid string) {
 		Package,
 		username,
 		deviceid,
-		strconv.FormatInt(request.Nonce, 10),
 		nonce,
 		authenticate.HashAndSign(username, deviceid, nonce),
 	}
@@ -165,6 +163,9 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+ * Let's a user update their account balance
+ */
 func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/account/update")
 	var update model.AcctUpdate

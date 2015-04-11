@@ -33,7 +33,6 @@ type AuthRequest struct {
 	Package  string `json:"package"`
 	UserName string `json:"username"`
 	DeviceId string `json:"deviceid"`
-	Nonce    string `json:"nonce"`
 	NonceEnc string `json:"nonceEnc"`
 	Hash     string `json:"hash"`
 }
@@ -55,7 +54,6 @@ func (reg *Login) Decode(r io.Reader) error {
 type CallbackResult struct {
 	Token1   string `json:"token1"`
 	Token2   string `json:"token2"`
-	Nonce    string `json:"nonce"`
 	NonceEnc string `json:nonceEnc`
 	Hash     string `json:"hash"`
 }

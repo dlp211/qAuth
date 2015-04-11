@@ -26,7 +26,6 @@ type ServiceRequest struct {
 	Package  string `json:"package"`
 	Username string `json:"username"`
 	DeviceId string `json:"deviceid"`
-	Nonce    string `json:"nonce"`
 	NonceEnc string `json:"nonceEnc"`
 	Hash     string `json:"hash"`
 }
@@ -38,7 +37,6 @@ func (req *ServiceRequest) Decode(r io.Reader) error {
 // This needs to be updated
 type ClientAuth struct {
 	Auth     int    `json:auth`
-	Nonce    string `json:"nonce"`
 	NonceEnc string `json:"nonceEnc"`
 	Hash     string `json:"hash"`
 }
@@ -51,6 +49,7 @@ func (req *ClientAuth) Decode(r io.Reader) error {
 type AddPackage struct {
 	Package          string `json:"package"`
 	UserName         string `json:"email"`
+	Password         string `json:"password"`
 	ProviderUserName string `json:"username"`
 }
 
@@ -137,7 +136,6 @@ type ClientRequest struct {
 	BluetoothId string `json:"bluetoothId"`
 	Package     string `json:"package"`
 	DeviceId    string `json:"deviceid"`
-	Nonce       string `json:"nonce"`
 	NonceEnc    string `json:"nonceEnc"`
 	Hash        string `json:"hash"`
 }
@@ -154,7 +152,6 @@ func (msg *GcmMessage) Marshal() ([]byte, error) {
 type TokenResult struct {
 	Token1   string `json:"token1"`
 	Token2   string `json:"token2"`
-	Nonce    string `json:"nonce"`
 	NonceEnc string `json:"nonceEnc"`
 	Hash     string `json:"hash"`
 }

@@ -103,26 +103,25 @@ func Hash(un, did, non string) []byte {
 	return hash
 }
 
-func ValidateRequest(req *model.ServiceRequest, DB *db.Tables) (*db.Provider, bool) {
+func DecryptNonce(nonceEnc string) string {
 	sha1hash := sha1.New()
-	bytes, _ := hex.DecodeString(req.NonceEnc)
+	bytes, _ := hex.DecodeString(nonceEnc)
+	nonce, err := rsa.DecryptOAEP(sha1hash, rand.Reader, PrivKey, bytes, nil)
+	if err != nil {
+		panic(err)
+	}
+	return string(nonce)
+}
+
+func ValidateRequest(req *model.ServiceRequest, DB *db.Tables) (*db.Provider, bool) {
 	signature, _ := hex.DecodeString(req.Hash)
 	if prov, ok := DB.Providers[req.Package]; ok {
 		var provPubKey rsa.PublicKey
 		provPubKey.N = big.NewInt(0)
 		_, _ = provPubKey.N.SetString(prov.Pk.N, 10)
 		provPubKey.E = prov.Pk.E
-		nonce, err := rsa.DecryptOAEP(sha1hash, rand.Reader, PrivKey, bytes, nil)
-		if err != nil {
-			panic(err)
-		}
-		if string(nonce) != req.Nonce {
-			logger.WARN("something is wrong")
-			logger.WARN("expected:" + req.Nonce)
-			logger.WARN("got: " + string(nonce))
-		}
 		hash := Hash(req.Username, req.DeviceId, req.NonceEnc)
-		err = rsa.VerifyPKCS1v15(&provPubKey, crypto.SHA1, hash, []byte(signature))
+		err := rsa.VerifyPKCS1v15(&provPubKey, crypto.SHA1, hash, []byte(signature))
 		if err != nil {
 			logger.WARN("DIDN'T VERIFY")
 			return &prov, false
@@ -133,22 +132,11 @@ func ValidateRequest(req *model.ServiceRequest, DB *db.Tables) (*db.Provider, bo
 }
 
 func ValidateClientAuthroization(auth *model.ClientAuth, pk *rsa.PublicKey) bool {
-	sha1hash := sha1.New()
-	bytes, _ := hex.DecodeString(auth.NonceEnc)
 	signature, _ := hex.DecodeString(auth.Hash)
 	authorized := auth.Auth == 1
 
-	nonce, err := rsa.DecryptOAEP(sha1hash, rand.Reader, PrivKey, bytes, nil)
-	if err != nil {
-		panic(err)
-	}
-	if string(nonce) != auth.Nonce {
-		logger.WARN("something is wrong")
-		logger.WARN("expected:" + auth.Nonce)
-		logger.WARN("got: " + string(nonce))
-	}
-	hash := Hash(strconv.Itoa(auth.Auth), auth.Nonce, auth.NonceEnc)
-	err = rsa.VerifyPKCS1v15(pk, crypto.SHA1, hash, []byte(signature))
+	hash := Hash(strconv.Itoa(auth.Auth), auth.NonceEnc, "")
+	err := rsa.VerifyPKCS1v15(pk, crypto.SHA1, hash, []byte(signature))
 	if err != nil {
 		logger.WARN("DIDN'T VERIFY")
 		return false
