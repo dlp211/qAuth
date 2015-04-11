@@ -11,6 +11,7 @@ type Request struct {
 	Balance  float64
 	Nonce    int64
 	DeviceId string
+	GcmId    string
 	Token1   string
 	Token2   string
 }
@@ -18,6 +19,17 @@ type Request struct {
 type Session struct {
 	Username   string
 	Expiration time.Time
+	GcmId      string
+}
+
+type LoginSession struct {
+	OldId     string `json:"old"`
+	NewId     string `json:"new"`
+	SessionId string `json:"sessionId"`
+}
+
+func (login *LoginSession) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&login)
 }
 
 type AcctUpdate struct {
@@ -45,6 +57,7 @@ type Login struct {
 	UserName string `json:"username"`
 	Password string `json:"password"`
 	DeviceId string `json:"deviceId"`
+	GcmId    string `json:"gcmId"`
 }
 
 func (reg *Login) Decode(r io.Reader) error {
@@ -109,4 +122,17 @@ type Data struct {
 
 func (d *Data) Marshal() ([]byte, error) {
 	return json.Marshal(d)
+}
+
+type GcmData struct {
+	MessageId string `json:"messageID"`
+}
+
+type GcmMessage struct {
+	RegIds []string `json:"registration_ids"`
+	Data   GcmData  `json:"data"`
+}
+
+func (msg *GcmMessage) Marshal() ([]byte, error) {
+	return json.Marshal(msg)
 }
