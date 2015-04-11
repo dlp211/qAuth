@@ -165,24 +165,27 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func UpdateAccount(wS http.ResponseWriter, r *http.Request) {
+func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	logger.INFO("/account/update")
 	var update model.AcctUpdate
 	err := update.Decode(r.Body)
 	if err != nil {
 		panic(err)
 	}
-	if session, ok := Sessions[update.SessionId]; ok {
+	if session, ok := Session[update.SessionId]; ok {
 		if !session.Expiration.After(time.Now()) {
 			w.WriteHeader(http.StatusGone)
 			return
 		}
-		if user, ok := db.Users[session.Username]; ok {
-			if user.Balance+session.Amount > 0.0 {
-				user.Balance += session.Amount
+		if user, ok := DB.Users[session.Username]; ok {
+			if user.Balance+update.Amount > 0.0 {
+				user.Balance += update.Amount
 				session.Expiration = time.Now().Add(time.Minute * 30)
 				data := model.Data{user.Balance, update.SessionId}
 				js, err := data.Marshal()
+				if err != nil {
+					panic(err)
+				}
 				w.WriteHeader(http.StatusAccepted)
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(js)

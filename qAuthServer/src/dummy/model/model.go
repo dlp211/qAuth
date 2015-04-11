@@ -8,7 +8,7 @@ import (
 
 type Request struct {
 	UserName string
-	Gpa      float32
+	Balance  float64
 	Nonce    int64
 	DeviceId string
 	Token1   string

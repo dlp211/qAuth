@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"logger"
 	"math/big"
+	mRand "math/rand"
 	"net/http"
 	"os"
 	"strconv"
@@ -28,9 +29,9 @@ var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func RandSeq(n int) string {
 	b := make([]rune, n)
-	rand.Seed(time.Now().UTC().UnixNano())
+	mRand.Seed(time.Now().UTC().UnixNano())
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[mRand.Intn(len(letters))]
 	}
 	return string(b)
 }
