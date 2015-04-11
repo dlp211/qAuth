@@ -318,6 +318,7 @@ public class MainActivity extends Activity {
             tv2.setText("QStoken == DStoken");
 
             Intent intent = ctx.getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
+            intent.putExtra("foundGPA", "3.996");
             ctx.startActivity(intent);
 
         } else {
