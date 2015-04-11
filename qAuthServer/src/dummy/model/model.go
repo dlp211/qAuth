@@ -20,6 +20,15 @@ type Session struct {
 	Expiration time.Time
 }
 
+type AcctUpdate struct {
+	SessionId string  `json:"session"`
+	Amount    float64 `json:"amount"`
+}
+
+func (update *AcctUpdate) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&update)
+}
+
 type AuthRequest struct {
 	Package  string `json:"package"`
 	UserName string `json:"username"`
@@ -96,7 +105,7 @@ func (reg *RegisterProvider) Marshal() ([]byte, error) {
 }
 
 type Data struct {
-	Gpa       float32 `json:"gpa"`
+	Balance   float64 `json:"balance"`
 	SessionId string  `json:"sessionid"`
 }
 

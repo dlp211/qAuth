@@ -16,12 +16,24 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 var PrivKey *rsa.PrivateKey
 var PubKey *rsa.PublicKey
 var PublicServerKey rsa.PublicKey
 var maxInt *big.Int = big.NewInt(9223372036854775807)
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func RandSeq(n int) string {
+	b := make([]rune, n)
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
 
 func Decrypt(payload string) string {
 	bytes, _ := hex.DecodeString(payload)

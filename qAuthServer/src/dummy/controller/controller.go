@@ -90,16 +90,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					panic(err)
 				}
-				request = model.Request{login.UserName, user.GPA, nonce.Int64(), login.DeviceId, "", ""}
+				request = model.Request{login.UserName, user.Balance, nonce.Int64(), login.DeviceId, "", ""}
 				launchTwoFactor(login.UserName, login.DeviceId)
 				w.WriteHeader(http.StatusAccepted)
 			} else {
-				d := model.Data{user.GPA, "ABCDEFG"}
+				session := authenticate.RandSeq(10)
+				d := model.Data{user.Balance, session}
 				js, err := d.Marshal()
 				if err != nil {
 					panic(err)
 				}
-				Session["ABCDEFG"] = model.Session{login.UserName, time.Now().Add(time.Minute * 30)}
+				Session[session] = model.Session{login.UserName, time.Now().Add(time.Minute * 30)}
 				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(js)
@@ -147,9 +148,10 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	logger.DEBUG(token.Token)
 	logger.DEBUG(request.Token1)
 	if token.Token == request.Token1 {
-		Session["GFEDCBA"] = model.Session{request.UserName, time.Now().Add(time.Minute * 30)}
+		session := authenticate.RandSeq(10)
+		Session[session] = model.Session{request.UserName, time.Now().Add(time.Minute * 30)}
 
-		twRes := model.TwofactorResult{request.Token2, model.Data{request.Gpa, "GFEDCBA"}}
+		twRes := model.TwofactorResult{request.Token2, model.Data{request.Balance, session}}
 		js, err := twRes.Marshal()
 		if err != nil {
 			panic(err)
@@ -163,8 +165,41 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func UpdateAccount(wS http.ResponseWriter, r *http.Request) {
+	logger.INFO("/account/update")
+	var update model.AcctUpdate
+	err := update.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	if session, ok := Sessions[update.SessionId]; ok {
+		if !session.Expiration.After(time.Now()) {
+			w.WriteHeader(http.StatusGone)
+			return
+		}
+		if user, ok := db.Users[session.Username]; ok {
+			if user.Balance+session.Amount > 0.0 {
+				user.Balance += session.Amount
+				session.Expiration = time.Now().Add(time.Minute * 30)
+				data := model.Data{user.Balance, update.SessionId}
+				js, err := data.Marshal()
+				w.WriteHeader(http.StatusAccepted)
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(js)
+			} else {
+				w.WriteHeader(http.StatusNotAcceptable)
+			}
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+}
+
 func BuildControllerSet() {
 	Controllers["/login"] = Login
 	Controllers["/qauth/callback"] = Callback
 	Controllers["/login/twofactor"] = TwoFactor
+	Controllers["/account/update"] = UpdateAccount
 }
