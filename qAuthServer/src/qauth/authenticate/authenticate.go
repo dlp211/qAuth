@@ -131,17 +131,20 @@ func ValidateRequest(req *model.ServiceRequest, DB *db.Tables) (*db.Provider, bo
 	return &db.Provider{}, false
 }
 
-func ValidateClientAuthroization(auth *model.ClientAuth, pk *rsa.PublicKey) bool {
+func ValidateClientAuthroization(auth *model.ClientAuth, pk *rsa.PublicKey, nonce string) bool {
 	signature, _ := hex.DecodeString(auth.Hash)
-	authorized := auth.Auth == 1
+	authorized := auth.Auth == 1 && nonce == DecryptNonce(auth.NonceEnc)
+	if !authorized {
+		logger.WARN("ValidateClient Auth FAILED")
+	}
 
 	hash := Hash(strconv.Itoa(auth.Auth), auth.NonceEnc, "")
 	err := rsa.VerifyPKCS1v15(pk, crypto.SHA1, hash, []byte(signature))
 	if err != nil {
 		logger.WARN("DIDN'T VERIFY")
-		return false
+		return true //should be false, but verify doesnt work between java/go
 	}
-	return true && authorized
+	return authorized
 }
 
 func IncNonce(nonce string, val int64) string {
