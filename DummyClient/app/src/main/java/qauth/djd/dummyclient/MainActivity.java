@@ -1,8 +1,10 @@
 package qauth.djd.dummyclient;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings.Secure;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -31,13 +33,13 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
-import android.provider.Settings.Secure;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -50,10 +52,20 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         deviceID = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
-        Intent intent = getIntent();
         tv3 = (TextView) findViewById(R.id.textView3);
-    }
 
+        Intent intent = getIntent();
+        String foundGPA = intent.getStringExtra("foundGPA");
+
+        if ( foundGPA != null ){
+
+            Intent intent2 = new Intent(this, GpaActivity.class);
+            intent2.putExtra("foundGPA", foundGPA);
+            startActivity(intent2);
+
+        }
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -80,11 +92,16 @@ public class MainActivity extends ActionBarActivity {
     public void clickLogin( final View v ){
         String username = ((EditText)findViewById(R.id.userName)).getText().toString();
         String password = ((EditText)findViewById(R.id.password)).getText().toString();
-        new LoginTask( username, password, this.deviceID ).execute();
 
-        Intent intent = getPackageManager().getLaunchIntentForPackage("qauth.djd.qauthclient");
-        intent.putExtra("packageName", "qauth.djd.dummyclient");
-        startActivityForResult(intent, 1);
+        if ( username.equals("dlp")) {
+            new LoginTask(username, password, this.deviceID, this).execute();
+
+            Intent intent = getPackageManager().getLaunchIntentForPackage("qauth.djd.qauthclient");
+            intent.putExtra("packageName", "qauth.djd.dummyclient");
+            startActivityForResult(intent, 1);
+        } else if ( username.equals("dgk")) {
+            new LoginTask(username, password, this.deviceID, this).execute();
+        }
     }
 
     public static HttpResponse makeRequest(String uri, String json) {
@@ -133,14 +150,17 @@ public class MainActivity extends ActionBarActivity {
         public String username;
         public String password;
         public String deviceid;
+        public Context ctx;
 
         LoginTask(
                 String username,
                 String password,
-                String deviceid){
+                String deviceid,
+                Context ctx){
             this.username = username;
             this.password = password;
             this.deviceid = deviceid;
+            this.ctx = ctx;
         }
         
         @Override
@@ -163,6 +183,18 @@ public class MainActivity extends ActionBarActivity {
         protected void onPostExecute(String result) {
             if ( result != null ){
                 Log.i("Login Task", "results: " + result);
+
+                try {
+                    JSONObject json = new JSONObject(result);
+                    String foundGPA = json.getString("gpa");
+
+                    Intent intent2 = new Intent(ctx, GpaActivity.class);
+                    intent2.putExtra("foundGPA", foundGPA);
+                    startActivity(intent2);
+
+                    //tv3.setText("GPA: " + foundGPA);
+                } catch (Exception e){}
+
             } else {
                 Log.i("Login Task", "No internet connection");
                 //Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show();

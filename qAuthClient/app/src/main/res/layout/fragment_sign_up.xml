@@ -94,7 +94,7 @@
             android:layout_weight="1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textVisiblePassword|textNoSuggestions"
+            android:inputType="textPassword|textNoSuggestions"
             android:hint="Create a password"
             android:ems="8"
             android:id="@+id/editTextSignupPassword"
