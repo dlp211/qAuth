@@ -124,7 +124,6 @@ func (pk *PublicKey) Marshal() ([]byte, error) {
 	return json.Marshal(pk)
 }
 
-// Data for GCM message, TODO: Add another data type to clean this up
 type Data struct {
 	MessageId   string        `json:"messageID"`
 	Request     ClientRequest `json:"authRequest"`
