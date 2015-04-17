@@ -128,6 +128,8 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		if nonce-3 == request.Nonce {
 			request.Token1 = authenticate.Decrypt(res.Token1)
 			request.Token2 = authenticate.Decrypt(res.Token2)
+		} else {
+			logger.WARN("bad nonce")
 		}
 	}
 }
