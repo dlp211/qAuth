@@ -90,34 +90,24 @@ public class GcmIntentService extends IntentService {
 
                     try {
                         String nonceEnc2 = MainActivity.auth.decrypt(nonceEnc);
-                        String nonceEnc3 = String.valueOf( Long.valueOf(nonceEnc2) + 1);
+                        String nonceEnc3 = MainActivity.auth.encrypt(String.valueOf( Long.valueOf(nonceEnc2) + 1));
 
                         Log.i("authRequest", "decrypt(nonceEnc): " + nonceEnc2 );
-                        Log.i("authRequest", "decrypt(nonceEnc) + 1: " + nonceEnc3 );
 
                         Log.i("authRequest", "packageName: " + packageName );
                         Log.i("authRequest", "deviceId: " + deviceId );
                         Log.i("authRequest", "nonceEnc: " + nonceEnc );
                         Log.i("authRequest", "sig: " + signature );
-                        //encrypt and send to clientAuthenticate
 
-                        //TODO: fix verifySignature function
                         if ( Authenticate.verifySignature( signature, (packageName + deviceId + nonceEnc).getBytes("UTF-8") ) ) {
                             // return json: { nonce, encrypt(nonce), auth, hash(auth+nonce+nonceEnc) }
-                            new ClientAuthenticate( MainActivity.auth.encrypt(nonceEnc3), auth,  MainActivity.auth.sign((auth + nonceEnc3).getBytes("UTF-8"))).execute();
+                            new ClientAuthenticate( nonceEnc3, auth,  MainActivity.auth.sign((auth + nonceEnc3).getBytes("UTF-8"))).execute();
                         } else {
                             Log.i("authRequest", "verifySignature FALSE");
                         }
                     } catch (Exception e) {
                         Log.i("GcmIntentService", e.toString());
                     }
-                    //call decode on nonceEnc
-                    // -> compare to nonce
-                    // if ==, cont.
-                    //
-                    //  call verifySig( hash(package+deviceId+nonceEnc), hash )
-                    // -> if true
-
                 } else if (messageID.equals("1")) { //tokenResult & callback
 
                     String token1 = "";
