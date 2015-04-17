@@ -139,6 +139,7 @@ func ValidateClientAuthroization(auth *model.ClientAuth, pk *rsa.PublicKey, nonc
 	}
 
 	hash := Hash(strconv.Itoa(auth.Auth), auth.NonceEnc, "")
+	logger.INFO(hash)
 	err := rsa.VerifyPKCS1v15(pk, crypto.SHA1, hash, []byte(signature))
 	if err != nil {
 		logger.WARN("DIDN'T VERIFY")
