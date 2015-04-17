@@ -276,9 +276,9 @@ func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest,
 	_, _ = pk.N.SetString(user.Pk.N, 10)
 	pk.E = user.Pk.E
 
-	nonce := authenticate.IncNonce(auth.Nonce, 1)
-	nonceenc := authenticate.Encrypt(nonce, &pk)
+	nonceenc := authenticate.Encrypt(request.Nonce, &pk)
 	hash := authenticate.HashAndSign(auth.Package, auth.DeviceId, nonceenc)
+	request.Nonce = authenticate.IncNonce(request.Nonce, 1)
 
 	msg := model.GcmMessage{
 		[]string{gcmid},
@@ -288,7 +288,6 @@ func sendGcmMessage(gcmid string, prov *db.Provider, auth *model.ServiceRequest,
 				user.BluetoothId,
 				auth.Package,
 				auth.DeviceId,
-				nonce,
 				nonceenc,
 				hash,
 			},
@@ -340,11 +339,11 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 	request = model.Request{
 		auth.Package,
 		auth.Username,
-		auth.Nonce,
+		authenticate.IncNonce(authenticate.DecryptNonce(auth.NonceEnc), 1),
 		auth.DeviceId,
 	}
 	if user, ok := DB.Users[auth.Username]; ok {
-		sendGcmMessage(user.GCMId[0], prov, &auth, &user)
+		sendGcmMessage(user.DeviceId[auth.DeviceId], prov, &auth, &user)
 		w.WriteHeader(http.StatusOK)
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -370,7 +369,7 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 	_, _ = pk.N.SetString(user.Pk.N, 10)
 	pk.E = user.Pk.E
 
-	if authenticate.ValidateClientAuthroization(&auth, &pk) || true {
+	if authenticate.ValidateClientAuthroization(&auth, &pk, request.Nonce) {
 		token1, token2 := authenticate.GenTokens()
 
 		_, _ = pk.N.SetString(prov.Pk.N, 10)
@@ -378,12 +377,11 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 
 		tk1 := authenticate.Encrypt(token1.String(), &pk)
 		tk2 := authenticate.Encrypt(token2.String(), &pk)
-		non := authenticate.IncNonce(request.Nonce, 3)
+		non := authenticate.IncNonce(request.Nonce, 1)
 		hash := authenticate.HashAndSign(tk1, tk2, non)
 		pkg := model.TokenResult{
 			tk1,
 			tk2,
-			non,
 			authenticate.Encrypt(non, &pk),
 			hash,
 		}
@@ -397,7 +395,7 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 		tk2 = authenticate.Encrypt(token2.String(), &pk)
 		hash = authenticate.HashAndSign(tk1, tk2, non)
 		gcm := model.GcmMessage{
-			user.GCMId,
+			[]string{user.DeviceId[request.DeviceID]},
 			model.Data{
 				"1",
 				model.ClientRequest{},
@@ -405,7 +403,6 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 				model.TokenResult{
 					tk1,
 					tk2,
-					non,
 					authenticate.Encrypt(non, &pk),
 					hash,
 				},

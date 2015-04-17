@@ -13,15 +13,28 @@ import (
 	"fmt"
 	"logger"
 	"math/big"
+	mRand "math/rand"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 var PrivKey *rsa.PrivateKey
 var PubKey *rsa.PublicKey
 var PublicServerKey rsa.PublicKey
 var maxInt *big.Int = big.NewInt(9223372036854775807)
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func RandSeq(n int) string {
+	b := make([]rune, n)
+	mRand.Seed(time.Now().UTC().UnixNano())
+	for i := range b {
+		b[i] = letters[mRand.Intn(len(letters))]
+	}
+	return string(b)
+}
 
 func Decrypt(payload string) string {
 	bytes, _ := hex.DecodeString(payload)
@@ -136,26 +149,24 @@ func LoadPrivKey(env string) *rsa.PrivateKey {
 	return privKey
 }
 
-func ValidateCallbackResult(result *model.CallbackResult) (int64, bool) {
+func DecryptNonce(nonceEnc string) string {
 	sha1hash := sha1.New()
-	bytes, _ := hex.DecodeString(result.NonceEnc)
-	signature, _ := hex.DecodeString(result.Hash)
+	bytes, _ := hex.DecodeString(nonceEnc)
 	nonce, err := rsa.DecryptOAEP(sha1hash, rand.Reader, PrivKey, bytes, nil)
 	if err != nil {
 		panic(err)
 	}
-	if string(nonce) != result.Nonce {
-		logger.WARN("something is wrong")
-		logger.WARN("expected:" + result.Nonce)
-		logger.WARN("got: " + string(nonce))
-		return 0, false
-	}
+	return string(nonce)
+}
+
+func ValidateCallbackResult(result *model.CallbackResult) (int64, bool) {
+	signature, _ := hex.DecodeString(result.Hash)
 	hash := Hash(result.Token1, result.Token2, result.NonceEnc)
-	err = rsa.VerifyPKCS1v15(&PublicServerKey, crypto.SHA1, hash, []byte(signature))
+	err := rsa.VerifyPKCS1v15(&PublicServerKey, crypto.SHA1, hash, []byte(signature))
 	if err != nil {
 		logger.WARN("DIDN'T VERIFY")
 		return 0, false
 	}
-	val, _ := strconv.ParseInt(string(nonce), 64, 10)
+	val, _ := strconv.ParseInt(DecryptNonce(result.NonceEnc), 64, 10)
 	return val, true
 }

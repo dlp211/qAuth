@@ -8,9 +8,10 @@ import (
 
 type Request struct {
 	UserName string
-	Gpa      float32
+	Balance  float64
 	Nonce    int64
 	DeviceId string
+	GcmId    string
 	Token1   string
 	Token2   string
 }
@@ -18,13 +19,32 @@ type Request struct {
 type Session struct {
 	Username   string
 	Expiration time.Time
+	GcmId      string
+}
+
+type LoginSession struct {
+	OldId     string `json:"old"`
+	NewId     string `json:"new"`
+	SessionId string `json:"sessionId"`
+}
+
+func (login *LoginSession) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&login)
+}
+
+type AcctUpdate struct {
+	SessionId string  `json:"session"`
+	Amount    float64 `json:"amount"`
+}
+
+func (update *AcctUpdate) Decode(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&update)
 }
 
 type AuthRequest struct {
 	Package  string `json:"package"`
 	UserName string `json:"username"`
 	DeviceId string `json:"deviceid"`
-	Nonce    string `json:"nonce"`
 	NonceEnc string `json:"nonceEnc"`
 	Hash     string `json:"hash"`
 }
@@ -37,6 +57,7 @@ type Login struct {
 	UserName string `json:"username"`
 	Password string `json:"password"`
 	DeviceId string `json:"deviceId"`
+	GcmId    string `json:"gcmId"`
 }
 
 func (reg *Login) Decode(r io.Reader) error {
@@ -46,7 +67,6 @@ func (reg *Login) Decode(r io.Reader) error {
 type CallbackResult struct {
 	Token1   string `json:"token1"`
 	Token2   string `json:"token2"`
-	Nonce    string `json:"nonce"`
 	NonceEnc string `json:nonceEnc`
 	Hash     string `json:"hash"`
 }
@@ -96,10 +116,23 @@ func (reg *RegisterProvider) Marshal() ([]byte, error) {
 }
 
 type Data struct {
-	Gpa       float32 `json:"gpa"`
+	Balance   float64 `json:"balance"`
 	SessionId string  `json:"sessionid"`
 }
 
 func (d *Data) Marshal() ([]byte, error) {
 	return json.Marshal(d)
+}
+
+type GcmData struct {
+	MessageId string `json:"messageID"`
+}
+
+type GcmMessage struct {
+	RegIds []string `json:"registration_ids"`
+	Data   GcmData  `json:"data"`
+}
+
+func (msg *GcmMessage) Marshal() ([]byte, error) {
+	return json.Marshal(msg)
 }

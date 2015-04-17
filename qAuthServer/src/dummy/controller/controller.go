@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"logger"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -53,7 +52,6 @@ func launchTwoFactor(username, deviceid string) {
 		Package,
 		username,
 		deviceid,
-		strconv.FormatInt(request.Nonce, 10),
 		nonce,
 		authenticate.HashAndSign(username, deviceid, nonce),
 	}
@@ -90,16 +88,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					panic(err)
 				}
-				request = model.Request{login.UserName, user.GPA, nonce.Int64(), login.DeviceId, "", ""}
+				request = model.Request{login.UserName, user.Balance, nonce.Int64(), login.DeviceId, login.GcmId, "", ""}
 				launchTwoFactor(login.UserName, login.DeviceId)
 				w.WriteHeader(http.StatusAccepted)
 			} else {
-				d := model.Data{user.GPA, "ABCDEFG"}
+				session := authenticate.RandSeq(10)
+				d := model.Data{user.Balance, session}
 				js, err := d.Marshal()
 				if err != nil {
 					panic(err)
 				}
-				Session["ABCDEFG"] = model.Session{login.UserName, time.Now().Add(time.Minute * 30)}
+				Session[session] = model.Session{login.UserName, time.Now().Add(time.Minute * 30), login.GcmId}
 				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(js)
@@ -147,9 +146,10 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	logger.DEBUG(token.Token)
 	logger.DEBUG(request.Token1)
 	if token.Token == request.Token1 {
-		Session["GFEDCBA"] = model.Session{request.UserName, time.Now().Add(time.Minute * 30)}
+		session := authenticate.RandSeq(10)
+		Session[session] = model.Session{request.UserName, time.Now().Add(time.Minute * 30), request.GcmId}
 
-		twRes := model.TwofactorResult{request.Token2, model.Data{request.Gpa, "GFEDCBA"}}
+		twRes := model.TwofactorResult{request.Token2, model.Data{request.Balance, session}}
 		js, err := twRes.Marshal()
 		if err != nil {
 			panic(err)
@@ -163,8 +163,107 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+ * Let's a user update their account balance
+ */
+func UpdateAccount(w http.ResponseWriter, r *http.Request) {
+	logger.INFO("/account/update")
+	var update model.AcctUpdate
+	err := update.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	if session, ok := Session[update.SessionId]; ok {
+		if !session.Expiration.After(time.Now()) {
+			delete(Session, update.SessionId)
+			w.WriteHeader(http.StatusGone)
+			return
+		}
+		if user, ok := DB.Users[session.Username]; ok {
+			if user.Balance+update.Amount > 0.0 {
+				user.Balance += update.Amount
+				session.Expiration = time.Now().Add(time.Minute * 30)
+				data := model.Data{user.Balance, update.SessionId}
+				js, err := data.Marshal()
+				if err != nil {
+					panic(err)
+				}
+				w.WriteHeader(http.StatusAccepted)
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(js)
+			} else {
+				w.WriteHeader(http.StatusNotAcceptable)
+			}
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+}
+
+func logout(gcmid string) {
+	url := "https://android.googleapis.com/gcm/send"
+
+	gcm := model.GcmMessage{[]string{gcmid}, model.GcmData{"0"}}
+
+	js, _ := gcm.Marshal()
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("project_id", "156110196668")
+	req.Header.Set("Authorization", "key=AIzaSyAFqyh9ZZFiY8HRcyUlidAg7IT3rvoN-Pk")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	logger.DEBUG("response: " + string(body))
+}
+
+func LoginSession(w http.ResponseWriter, r *http.Request) {
+	logger.INFO("/login/session")
+	var login model.LoginSession
+	err := login.Decode(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	if session, ok := Session[login.SessionId]; ok {
+		if !session.Expiration.After(time.Now()) {
+			delete(Session, login.SessionId)
+			w.WriteHeader(http.StatusGone)
+			return
+		}
+		if session.GcmId == login.OldId {
+			session.GcmId = login.NewId
+			logout(login.OldId)
+			session.Expiration = time.Now().Add(time.Minute * 30)
+			if user, ok := DB.Users[session.Username]; ok {
+				data := model.Data{user.Balance, login.SessionId}
+				js, err := data.Marshal()
+				if err != nil {
+					panic(err)
+				}
+				w.WriteHeader(http.StatusAccepted)
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(js)
+			}
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
 func BuildControllerSet() {
 	Controllers["/login"] = Login
 	Controllers["/qauth/callback"] = Callback
 	Controllers["/login/twofactor"] = TwoFactor
+	Controllers["/account/update"] = UpdateAccount
+	Controllers["/login/session"] = LoginSession
 }
