@@ -14,7 +14,6 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import org.json.JSONObject;
 
-import qauth.djd.qauthclient.POST.ClientAuthenticate;
 import qauth.djd.qauthclient.POST.LoginTwoFactor;
 
 /**
@@ -109,7 +108,7 @@ public class GcmIntentService extends IntentService {
                             //TODO: fix verifySignature function
                             //if ( Authenticate.verifySignature( hash, Authenticate.hash(packageName + deviceId + nonceEnc) ) ){
                                 // return json: { nonce, encrypt(nonce), auth, hash(auth+nonce+nonceEnc) }
-                                new ClientAuthenticate( nonce, MainActivity.auth.encrypt(nonceEnc3), auth,  MainActivity.auth.hashAndSign(auth + nonce + nonceEnc)).execute();
+                                //TODO: reimplement: new ClientAuthenticate( nonce, MainActivity.auth.encrypt(nonceEnc3), auth,  MainActivity.auth.hashAndSign(auth + nonce + nonceEnc)).execute();
                             //} else {
                                 //Log.i("authRequest", "verifySignature FALSE");
                             //}
