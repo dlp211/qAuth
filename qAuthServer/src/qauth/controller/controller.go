@@ -377,12 +377,13 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 
 		tk1 := authenticate.Encrypt(token1.String(), &pk)
 		tk2 := authenticate.Encrypt(token2.String(), &pk)
-		non := authenticate.Encrypt(authenticate.IncNonce(request.Nonce, 1), &pk)
+		non := authenticate.IncNonce(request.Nonce, 1)
+		nonEnc := authenticate.Encrypt(non, &pk)
 		hash := authenticate.HashAndSign(tk1, tk2, non)
 		pkg := model.TokenResult{
 			tk1,
 			tk2,
-			non,
+			nonEnc,
 			hash,
 		}
 
@@ -393,7 +394,8 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 
 		tk1 = authenticate.Encrypt(token1.String(), &pk)
 		tk2 = authenticate.Encrypt(token2.String(), &pk)
-		hash = authenticate.HashAndSign(tk1, tk2, non)
+		nonEnc = authenticate.Encrypt(non, &pk)
+		hash = authenticate.HashAndSign(tk1, tk2, nonEnc)
 		gcm := model.GcmMessage{
 			[]string{user.DeviceId[request.DeviceID]},
 			model.Data{
@@ -403,7 +405,7 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 				model.TokenResult{
 					tk1,
 					tk2,
-					non,
+					nonEnc,
 					hash,
 				},
 			},
