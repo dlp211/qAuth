@@ -14,6 +14,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import org.json.JSONObject;
 
+import qauth.djd.qauthclient.POST.ClientAuthenticate;
 import qauth.djd.qauthclient.POST.LoginTwoFactor;
 
 /**
@@ -70,22 +71,21 @@ public class GcmIntentService extends IntentService {
                     String authRequest = extras.getString("authRequest");
 
                     Log.i("authRequest", authRequest);
-                    //authRequest: { "bluetoothId", "package", "deviceid", "nonce", "nonceEnc", "hash" }
+                    //authRequest: { "bluetoothId", "package", "deviceid", "nonceEnc", "hash" }
 
                     String nonceEnc = "";
                     String nonce = "";
                     String packageName = "";
                     String deviceId = "";
-                    String hash = "";
+                    String signature = "";
                     int auth = 1;
 
                     try {
                         JSONObject json = new JSONObject(authRequest);
                         nonceEnc = json.getString("nonceEnc");
-                        nonce = json.getString("nonce");
                         packageName = json.getString("package");
                         deviceId = json.getString("deviceid");
-                        hash = json.getString("hash");
+                        signature = json.getString("hash");
                     } catch (Exception e){}
 
                     try {
@@ -98,23 +98,16 @@ public class GcmIntentService extends IntentService {
                         Log.i("authRequest", "packageName: " + packageName );
                         Log.i("authRequest", "deviceId: " + deviceId );
                         Log.i("authRequest", "nonceEnc: " + nonceEnc );
-                        Log.i("authRequest", "hash: " + hash );
-
-                        //turn nonceEnc2 in to Long
-                        //nonceEnc2 + 1
+                        Log.i("authRequest", "sig: " + signature );
                         //encrypt and send to clientAuthenticate
 
-                        //if ( nonceEnc2.equals(nonce) ) {
-                            //TODO: fix verifySignature function
-                            //if ( Authenticate.verifySignature( hash, Authenticate.hash(packageName + deviceId + nonceEnc) ) ){
-                                // return json: { nonce, encrypt(nonce), auth, hash(auth+nonce+nonceEnc) }
-                                //TODO: reimplement: new ClientAuthenticate( nonce, MainActivity.auth.encrypt(nonceEnc3), auth,  MainActivity.auth.hashAndSign(auth + nonce + nonceEnc)).execute();
-                            //} else {
-                                //Log.i("authRequest", "verifySignature FALSE");
-                            //}
-                        //} else {
-                        //    Log.i("authRequest", "decrypt(nonceEnc) != nonce");
-                        //}
+                        //TODO: fix verifySignature function
+                        if ( Authenticate.verifySignature( signature, (packageName + deviceId + nonceEnc).getBytes("UTF-8") ) ) {
+                            // return json: { nonce, encrypt(nonce), auth, hash(auth+nonce+nonceEnc) }
+                            new ClientAuthenticate( MainActivity.auth.encrypt(nonceEnc3), auth,  MainActivity.auth.sign((auth + nonceEnc3).getBytes("UTF-8"))).execute();
+                        } else {
+                            Log.i("authRequest", "verifySignature FALSE");
+                        }
                     } catch (Exception e) {
                         Log.i("GcmIntentService", e.toString());
                     }
