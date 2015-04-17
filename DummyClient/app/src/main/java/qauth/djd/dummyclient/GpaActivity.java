@@ -16,13 +16,13 @@ public class GpaActivity extends ActionBarActivity {
         setContentView(R.layout.activity_gpa);
 
         Intent intent = getIntent();
-        String foundGPA = intent.getStringExtra("foundGPA");
+        String balance = intent.getStringExtra("balance");
 
         TextView gpaTV = (TextView) findViewById(R.id.gpaTextView);
 
-        if ( foundGPA != null ){
+        if ( balance != null ){
 
-            gpaTV.setText("GPA: " + foundGPA);
+            gpaTV.setText("balance: " + balance);
 
         }
     }

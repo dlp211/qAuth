@@ -17,13 +17,16 @@
 package qauth.djd.qauthclient.main;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,13 +44,24 @@ import com.google.android.gms.wearable.Wearable;
 import com.melnykov.fab.FloatingActionButton;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import qauth.djd.qauthclient.Authenticate;
 import qauth.djd.qauthclient.POST.RegisterBluetooth;
 import qauth.djd.qauthclient.R;
 
@@ -65,6 +79,10 @@ public class ContentFragment extends Fragment implements MessageApi.MessageListe
     private enum LayoutManagerType {
         //GRID_LAYOUT_MANAGER,
         LINEAR_LAYOUT_MANAGER
+    }
+
+    static {
+        Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
     }
 
     protected LayoutManagerType mCurrentLayoutManagerType;
@@ -195,10 +213,37 @@ public class ContentFragment extends Fragment implements MessageApi.MessageListe
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
+
                                     String nodeId = arrayAdapter.getItem(which);
+                                    String privKey = null;
+                                    String pubKey = null;
+
+                                    try {
+                                        SecureRandom random = new SecureRandom();
+                                        RSAKeyGenParameterSpec spec = new RSAKeyGenParameterSpec(1024, RSAKeyGenParameterSpec.F4);
+                                        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "SC");
+                                        generator.initialize(spec, random);
+                                        KeyPair pair = generator.generateKeyPair();
+                                        privKey = Base64.encodeToString(pair.getPrivate().getEncoded(), Base64.DEFAULT);
+                                        pubKey = Base64.encodeToString(pair.getPublic().getEncoded(), Base64.DEFAULT);
+                                    } catch (Exception e){ Log.i("generate", "error: " + e);}
+
+                                    //Log.i("keys", "priv key : " + privKey);
+
+                                    //String privKey = Base64.encodeToString(MainTabsActivity.privKey.getEncoded(), Base64.DEFAULT);
+                                    //String pubKey = Base64.encodeToString(MainTabsActivity.pubKey.getEncoded(), Base64.DEFAULT);
+
+                                    Keys keys = new Keys(privKey, pubKey);
+                                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                    ObjectOutput out = null;
+                                    try { out = new ObjectOutputStream(bos); } catch (Exception e){}
+                                    try { out.writeObject(keys); } catch (Exception e){}
+                                    byte b[] = bos.toByteArray();
+                                    try { out.close(); } catch (Exception e){}
+                                    try { bos.close(); } catch (Exception e){}
 
                                     Wearable.MessageApi.sendMessage(
-                                            mGoogleApiClient, nodeId, "REGISTER", new byte[0]).setResultCallback(
+                                            mGoogleApiClient, nodeId, "REGISTER", b).setResultCallback(
                                             new ResultCallback<MessageApi.SendMessageResult>() {
                                                 @Override
                                                 public void onResult(MessageApi.SendMessageResult sendMessageResult) {
@@ -245,7 +290,7 @@ public class ContentFragment extends Fragment implements MessageApi.MessageListe
 
     }
 
-    GoogleApiClient mGoogleApiClient;
+    public static GoogleApiClient mGoogleApiClient;
 
     private Collection<String> getNodes() {
         HashSet<String> results = new HashSet<String>();
@@ -299,25 +344,26 @@ public class ContentFragment extends Fragment implements MessageApi.MessageListe
                     }
                 });
 
+                RSAPrivateKey rsaPrivKey = null;
+                RSAPublicKey rsaPubKey = null;
+
+                try {
+                    rsaPrivKey = (RSAPrivateKey) Authenticate.getPrivKeyFromString(watch.privKey);
+                    rsaPubKey = (RSAPublicKey) Authenticate.getPubKeyFromString(watch.pubKey);
+                } catch (Exception e) {}
+
+
+                String N = rsaPubKey.getModulus().toString(10); //N
+                int E = rsaPubKey.getPublicExponent().intValue(); //E
+
                 for (String nodeId : getNodes()) {
-                    Wearable.MessageApi.sendMessage(
-                            mGoogleApiClient, nodeId, "REGISTER_COMPLETE", new byte[0]).setResultCallback(
-                            new ResultCallback<MessageApi.SendMessageResult>() {
-                                @Override
-                                public void onResult(MessageApi.SendMessageResult sendMessageResult) {
-                                    if (!sendMessageResult.getStatus().isSuccess()) {
-                                        Log.i("MessageApi", "Failed to send message with status code: "
-                                                + sendMessageResult.getStatus().getStatusCode());
-                                    } else if (sendMessageResult.getStatus().isSuccess()) {
-                                        Log.i("MessageApi", "onResult successful!");
-                                    }
-                                }
-                            }
-                    );
+
+                    SharedPreferences prefs = getActivity().getSharedPreferences("qauth.djd.qauthclient", Context.MODE_PRIVATE);
+                    String email = prefs.getString("email", "email");
+                    String password = prefs.getString("password", "password");
+                    new RegisterBluetooth(email, password, watch.deviceId, N, E, nodeId).execute();
+
                 }
-
-                new RegisterBluetooth("email", "password", watch.deviceId, "key 1", 0).execute();
-
 
             } else {
                 Log.i("WATCH SERIALIZABLE", "watch = null");

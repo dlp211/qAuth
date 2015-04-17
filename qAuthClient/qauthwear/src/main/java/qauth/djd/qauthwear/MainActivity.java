@@ -17,13 +17,18 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
+import qauth.djd.qauthclient.main.Keys;
 import qauth.djd.qauthclient.main.Watch;
 
 public class MainActivity extends Activity implements MessageApi.MessageListener, com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks {
@@ -58,7 +63,7 @@ public class MainActivity extends Activity implements MessageApi.MessageListener
                 .build();
         mGoogleApiClient.connect();
 
-                /*
+        /* WRITING TO FILE
         String filename = "privatekey";
         String string = "this should be my private key";
         FileOutputStream outputStream;
@@ -72,6 +77,8 @@ public class MainActivity extends Activity implements MessageApi.MessageListener
         }
         Log.i("test", "Created");
         */
+
+        /* READING FROM FILE
 
         String privateKey = "this should be my private key";
         String filename = "privatekey";
@@ -88,6 +95,7 @@ public class MainActivity extends Activity implements MessageApi.MessageListener
         } catch (Exception e){
             Log.i("test", "e: " + e);
         }
+        */
 
     }
 
@@ -140,9 +148,45 @@ public class MainActivity extends Activity implements MessageApi.MessageListener
 
     }
 
+    static Keys keys;
+
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         if (messageEvent.getPath().equals("REGISTER")) {
+
+            keys = null;
+            ByteArrayInputStream bis = new ByteArrayInputStream(messageEvent.getData());
+            ObjectInput in = null;
+            try { in = new ObjectInputStream(bis); } catch (Exception e) { Log.i("exception1", "e: " + e); }
+            try { keys = (Keys) in.readObject(); } catch (Exception e) { Log.i("exception2", "e: " + e); }
+
+            String filename = "privKey";
+            String string = keys.privKey;
+            FileOutputStream outputStream;
+
+            try {
+                outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+                outputStream.write(string.getBytes());
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            String filename2 = "pubKey";
+            String string2 = keys.pubKey;
+            FileOutputStream outputStream2;
+
+            try {
+                outputStream2 = openFileOutput(filename2, Context.MODE_PRIVATE);
+                outputStream2.write(string2.getBytes());
+                outputStream2.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            //Log.i("KEYS", "PRIV KEY: " + tokens.privKey);
+            //Log.i("KEYS", "PUB KEY: " + tokens.pubKey);
+
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -154,7 +198,7 @@ public class MainActivity extends Activity implements MessageApi.MessageListener
                 public void run() {
                     String android_id = Secure.getString(ctx.getContentResolver(),Secure.ANDROID_ID);
 
-                    Watch watch = new Watch(android_id, android.os.Build.MODEL);
+                    Watch watch = new Watch(android_id, android.os.Build.MODEL, keys.privKey, keys.pubKey);
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     ObjectOutput out = null;
                     try { out = new ObjectOutputStream(bos); } catch (Exception e){}
@@ -208,6 +252,71 @@ public class MainActivity extends Activity implements MessageApi.MessageListener
                     mTextView.setText("Authorized successfully!");
                 }
             });
+        }  else if (messageEvent.getPath().equals("GET_WATCH")) {
+            new Thread(new Runnable() {
+                public void run() {
+                    String android_id = Secure.getString(ctx.getContentResolver(),Secure.ANDROID_ID);
+
+                    String privKey = null;
+                    String filename = "privKey";
+                    FileInputStream inputStream;
+                    try {
+                        byte[] b = new byte[1024];
+                        inputStream = openFileInput(filename);
+                        inputStream.read(b);
+                        inputStream.close();
+                        Log.i("inputStream", "byte: " + new String(b) );
+                        privKey = new String(b);
+                    } catch (Exception e){
+                        Log.i("test", "e: " + e);
+                    }
+
+                    String pubKey = null;
+                    String filename2 = "pubKey";
+                    FileInputStream inputStream2;
+                    try {
+                        byte[] b2 = new byte[1024];
+                        inputStream2 = openFileInput(filename);
+                        inputStream2.read(b2);
+                        inputStream2.close();
+                        Log.i("inputStream", "byte: " + new String(b2) );
+                        pubKey = new String(b2);
+                    } catch (Exception e){
+                        Log.i("test", "e: " + e);
+                    }
+
+                    Log.i("LOAD", "privKey: " + privKey);
+                    Log.i("LOAD", "pubKey: " + pubKey);
+
+                    Watch watch = new Watch(android_id, android.os.Build.MODEL, privKey, pubKey);
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    ObjectOutput out = null;
+                    try { out = new ObjectOutputStream(bos); } catch (Exception e){}
+                    try { out.writeObject(watch); } catch (Exception e){}
+                    byte b[] = bos.toByteArray();
+                    try { out.close(); } catch (Exception e){}
+                    try { bos.close(); } catch (Exception e){}
+
+                    for ( String s : getNodes() ){
+
+                        Wearable.MessageApi.sendMessage(
+                                mGoogleApiClient, s, "GET_WATCH", b).setResultCallback(
+                                new ResultCallback<MessageApi.SendMessageResult>() {
+                                    @Override
+                                    public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                                        if (!sendMessageResult.getStatus().isSuccess()) {
+                                            Log.i("MessageApi", "Failed to send message with status code: "
+                                                    + sendMessageResult.getStatus().getStatusCode());
+                                        } else if ( sendMessageResult.getStatus().isSuccess() ){
+                                            Log.i("MessageApi", "onResult successful!");
+                                        }
+                                    }
+                                }
+                        );
+
+                    }
+                }
+            }).start();
         }
     }
 }

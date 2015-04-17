@@ -90,26 +90,32 @@ public class GcmIntentService extends IntentService {
                     } catch (Exception e){}
 
                     try {
-                        String nonceEnc2 = Authenticate.decrypt(nonceEnc);
+                        String nonceEnc2 = MainActivity.auth.decrypt(nonceEnc);
+                        String nonceEnc3 = String.valueOf( Long.valueOf(nonceEnc2) + 1);
+
                         Log.i("authRequest", "decrypt(nonceEnc): " + nonceEnc2 );
-                        Log.i("authRequest", "nonce: " + nonce );
+                        Log.i("authRequest", "decrypt(nonceEnc) + 1: " + nonceEnc3 );
 
                         Log.i("authRequest", "packageName: " + packageName );
                         Log.i("authRequest", "deviceId: " + deviceId );
                         Log.i("authRequest", "nonceEnc: " + nonceEnc );
                         Log.i("authRequest", "hash: " + hash );
 
-                        if ( nonceEnc2.equals(nonce) ) {
+                        //turn nonceEnc2 in to Long
+                        //nonceEnc2 + 1
+                        //encrypt and send to clientAuthenticate
+
+                        //if ( nonceEnc2.equals(nonce) ) {
                             //TODO: fix verifySignature function
                             //if ( Authenticate.verifySignature( hash, Authenticate.hash(packageName + deviceId + nonceEnc) ) ){
                                 // return json: { nonce, encrypt(nonce), auth, hash(auth+nonce+nonceEnc) }
-                                new ClientAuthenticate( nonce, Authenticate.encrypt(nonce), auth, Authenticate.hashAndSign(auth + nonce + nonceEnc)).execute();
+                                new ClientAuthenticate( nonce, MainActivity.auth.encrypt(nonceEnc3), auth,  MainActivity.auth.hashAndSign(auth + nonce + nonceEnc)).execute();
                             //} else {
                                 //Log.i("authRequest", "verifySignature FALSE");
                             //}
-                        } else {
-                            Log.i("authRequest", "decrypt(nonceEnc) != nonce");
-                        }
+                        //} else {
+                        //    Log.i("authRequest", "decrypt(nonceEnc) != nonce");
+                        //}
                     } catch (Exception e) {
                         Log.i("GcmIntentService", e.toString());
                     }
@@ -132,8 +138,11 @@ public class GcmIntentService extends IntentService {
                         String token1Enc = json.getString("token1");
                         String token2Enc = json.getString("token2");
 
-                        token1 = Authenticate.decrypt(token1Enc);
-                        token2 = Authenticate.decrypt(token2Enc);
+                        token1 = MainActivity.auth.decrypt(token1Enc);
+                        token2 = MainActivity.auth.decrypt(token2Enc);
+
+                        Log.i("tokenResult", "token1: " + token1);
+                        Log.i("tokenResult", "token2: " + token2);
 
                     } catch (Exception e){ Log.i("tokenResult&callback", e.toString());}
 

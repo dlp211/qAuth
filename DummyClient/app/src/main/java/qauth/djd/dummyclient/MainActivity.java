@@ -55,12 +55,12 @@ public class MainActivity extends ActionBarActivity {
         tv3 = (TextView) findViewById(R.id.textView3);
 
         Intent intent = getIntent();
-        String foundGPA = intent.getStringExtra("foundGPA");
+        String balance = intent.getStringExtra("balance");
 
-        if ( foundGPA != null ){
+        if ( balance != null ){
 
             Intent intent2 = new Intent(this, GpaActivity.class);
-            intent2.putExtra("foundGPA", foundGPA);
+            intent2.putExtra("balance", balance);
             startActivity(intent2);
 
         }
@@ -186,10 +186,10 @@ public class MainActivity extends ActionBarActivity {
 
                 try {
                     JSONObject json = new JSONObject(result);
-                    String foundGPA = json.getString("gpa");
+                    String balance = json.getString("balance");
 
                     Intent intent2 = new Intent(ctx, GpaActivity.class);
-                    intent2.putExtra("foundGPA", foundGPA);
+                    intent2.putExtra("balance", balance);
                     startActivity(intent2);
 
                     //tv3.setText("GPA: " + foundGPA);

@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity  {
 
     GifView gifView;
     private GoogleApiClient client;
@@ -84,6 +84,8 @@ public class MainActivity extends Activity {
 
     String regid;
 
+    public static Authenticate auth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,36 +101,6 @@ public class MainActivity extends Activity {
 
         String deviceId = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
         Log.i(TAG, "deviceId: " + deviceId);
-
-        /*try {
-
-            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-            byte[] input = "abc".getBytes();
-            Cipher cipher = Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", "BC");
-            SecureRandom random = new SecureRandom();
-            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "BC");
-
-            generator.initialize(1024, random);
-
-            KeyPair pair = generator.generateKeyPair();
-            Key pubKey = pair.getPublic();
-
-            Key privKey = pair.getPrivate();
-
-            //Log.i(TAG, "pubKey: " + pubKey.toString() );
-            //Log.i(TAG, "privKey: " + privKey.toString() );
-
-            cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-            byte[] cipherText = cipher.doFinal(input);
-            //Log.i(TAG, "cipher: " + new String(cipherText));
-
-            cipher.init(Cipher.DECRYPT_MODE, privKey);
-            byte[] plainText = cipher.doFinal(cipherText);
-            //Log.i(TAG, "plain : " + new String(plainText));
-
-        } catch (Exception e) {
-
-        }*/
 
         /*
         Handler handler = new Handler();
@@ -146,16 +118,9 @@ public class MainActivity extends Activity {
             }
         }, 3500);*/
 
+        auth = new Authenticate(this);
+
         Log.i(TAG, "logcat test");
-
-        //new GetTokenTask("007").execute();
-
-        /*
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                new GetTokenTask("007").execute();
-            }
-        }, 4000);*/
 
     }
 
@@ -311,14 +276,17 @@ public class MainActivity extends Activity {
     public static void compareTokens() {
 
         SharedPreferences prefs = ctx.getSharedPreferences("qauth.djd.qauthclient",Context.MODE_PRIVATE);
-        String QStoken = prefs.getString("QStoken", "QStoken");
-        String DStoken = prefs.getString("DStoken", "DStoken");
+        String QStoken = prefs.getString("QStoken", "QStoken"); //qServer token
+        String DStoken = prefs.getString("DStoken", "DStoken"); //dServer token
+
+        Log.i("compareTokens", "QStoken: " + QStoken);
+        Log.i("compareTokens", "DStoken: " + DStoken);
 
         if ( QStoken.equals(DStoken) ){
             tv2.setText("QStoken == DStoken");
 
             Intent intent = ctx.getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
-            intent.putExtra("foundGPA", "3.996");
+            intent.putExtra("balance", prefs.getString("balance", "0"));
             ctx.startActivity(intent);
 
         } else {

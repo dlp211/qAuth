@@ -9,6 +9,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+
 import qauth.djd.qauthclient.MainActivity;
 import qauth.djd.qauthclient.R;
 import qauth.djd.qauthclient.login.LoginActivity;
@@ -22,6 +25,9 @@ public class MainTabsActivity extends SampleActivityBase {
 
     // Whether the Log Fragment is currently shown
     private boolean mLogShown;
+
+    public static RSAPublicKey pubKey;
+    public static RSAPrivateKey privKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

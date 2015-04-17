@@ -2,6 +2,9 @@ package qauth.djd.qauthclient.POST;
 
 import android.util.Log;
 
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.wearable.Wearable;
 import com.google.gson.Gson;
 
 import org.apache.http.client.ClientProtocolException;
@@ -10,6 +13,8 @@ import org.apache.http.entity.StringEntity;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+
+import qauth.djd.qauthclient.main.ContentFragment;
 
 public class RegisterBluetooth extends PostRequest {
 
@@ -42,14 +47,16 @@ public class RegisterBluetooth extends PostRequest {
     public String bluetoothId;
     public String N;
     public int E;
+    public String nodeId;
 
     public RegisterBluetooth(
-            String email, String password, String bluetoothId, String N, int E){
+            String email, String password, String bluetoothId, String N, int E, String nodeId){
         this.email = email;
         this.password = password;
         this.bluetoothId = bluetoothId;
         this.N = N;
         this.E = E;
+        this.nodeId = nodeId;
     }
 
     @Override
@@ -83,7 +90,28 @@ public class RegisterBluetooth extends PostRequest {
     protected void onPostExecute(String result) {
         Log.i("RegisterBluetooth result", "response: " + result);
 
-        //202 if successfully registered
+        if ( result.equals("202") ){ //202 if successfully registered
+            //store public and private key strings on watch
+
+            //String bytes = Base64.encodeToString(MainTabsActivity.privKey.getEncoded(), Base64.DEFAULT);
+            //String pk = Base64.encodeToString(MainTabsActivity.pubKey.getEncoded(), Base64.DEFAULT);
+
+            Wearable.MessageApi.sendMessage(
+                    ContentFragment.mGoogleApiClient, nodeId, "REGISTER_COMPLETE", new byte[0]).setResultCallback(
+                    new ResultCallback<MessageApi.SendMessageResult>() {
+                        @Override
+                        public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                            if (!sendMessageResult.getStatus().isSuccess()) {
+                                Log.i("MessageApi", "Failed to send message with status code: "
+                                        + sendMessageResult.getStatus().getStatusCode());
+                            } else if (sendMessageResult.getStatus().isSuccess()) {
+                                Log.i("MessageApi", "onResult successful!");
+                            }
+                        }
+                    }
+            );
+        }
+
         //409 is already registered
 
     }
