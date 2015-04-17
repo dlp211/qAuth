@@ -343,7 +343,7 @@ func AttemptAuthenticate(w http.ResponseWriter, r *http.Request) {
 		auth.DeviceId,
 	}
 	if user, ok := DB.Users[auth.Username]; ok {
-		sendGcmMessage(user.GCMId[0], prov, &auth, &user)
+		sendGcmMessage(user.DeviceId[auth.DeviceId], prov, &auth, &user)
 		w.WriteHeader(http.StatusOK)
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -395,7 +395,7 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 		tk2 = authenticate.Encrypt(token2.String(), &pk)
 		hash = authenticate.HashAndSign(tk1, tk2, non)
 		gcm := model.GcmMessage{
-			user.GCMId,
+			[]string{user.DeviceId[request.DeviceID]},
 			model.Data{
 				"1",
 				model.ClientRequest{},

@@ -11,14 +11,13 @@ import (
 type User struct {
 	Password    string
 	Salt        string
-	DeviceId    []string
-	GCMId       []string
+	DeviceId    map[string]string
 	BluetoothId string
 	Pk          model.PublicKey
 }
 
 func (u *User) String() string {
-	return fmt.Sprintf("%s %s %v", u.DeviceId, u.GCMId, u.Pk)
+	return fmt.Sprintf("%v %v %v", u.DeviceId, u.DeviceId, u.Pk)
 }
 
 type Provider struct {
@@ -50,11 +49,11 @@ func (DB *Tables) CreateUser(reg *model.Registration, hashedPW string, salt stri
 	DB.Users[reg.UserName] = User{
 		hashedPW,
 		salt,
-		[]string{reg.DeviceId},
-		[]string{reg.GCMId},
+		make(map[string]string),
 		"",
 		model.PublicKey{"", 0},
 	}
+	DB.Users[reg.UserName].DeviceId[reg.DeviceId] = reg.GCMId
 }
 
 func (DB *Tables) CreateProvider(prov *model.RegisterProvider) {
