@@ -41,14 +41,6 @@ public class Authenticate {
         return new String(rsaCipher.doFinal(msg), "UTF-8");
     }
 
-    public static byte[] hash(String message) throws Exception {
-        MessageDigest md = MessageDigest.getInstance("SHA-1", "SC");
-        byte[] passByte = message.getBytes();
-        passByte = md.digest(passByte);
-        Log.i("hash test", "passByte: " + Hex.toHexString(passByte) );
-        return passByte;
-    }
-
     public static String sign(byte[] message) throws Exception {
         Signature signature = Signature.getInstance("SHA1withRSA", "SC");
         signature.initSign(getPrivKey());
@@ -56,26 +48,11 @@ public class Authenticate {
         return Hex.toHexString(signature.sign());
     }
 
-    public static boolean verifySignature(String sig, byte[] hash) throws Exception {
-
-        //Authenticate.verifySignature( hash, Authenticate.hash(packageName + deviceId + nonceEnc) )
-
+    public static boolean verifySignature(String sig, byte[] bytes) throws Exception {
         Signature verifier = Signature.getInstance("SHA1withRSA", "SC");
         verifier.initVerify(getPubKey());
-        verifier.update(hash);
-
-        Log.i("verifySignature", "sig: " + sig);
-        Log.i("verifySignature", verifier.toString() );
-        Log.i("verifySignature", getPubKey().getAlgorithm() );
-
-        String decryptedHash = decrypt(sig);
-        Log.i("verifySignature", "decryptedHash: " + decryptedHash);
-
+        verifier.update(bytes);
         return verifier.verify( Hex.decode(sig) );
-    }
-
-    public static String hashAndSign(String message) throws Exception {
-        return sign(hash(message));
     }
 
     public static RSAPrivateKey getPrivKey() throws Exception {
