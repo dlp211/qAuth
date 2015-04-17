@@ -142,7 +142,7 @@ func ValidateClientAuthroization(auth *model.ClientAuth, pk *rsa.PublicKey, nonc
 	err := rsa.VerifyPKCS1v15(pk, crypto.SHA1, hash, []byte(signature))
 	if err != nil {
 		logger.WARN("DIDN'T VERIFY")
-		return true //should be false, but verify doesnt work between java/go
+		return false
 	}
 	return authorized
 }

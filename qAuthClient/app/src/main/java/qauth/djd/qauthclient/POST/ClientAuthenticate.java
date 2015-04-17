@@ -15,13 +15,11 @@ public class ClientAuthenticate extends PostRequest {
 
     private static class ClientAuthenticateJson {
 
-        private String nonce;
         private String nonceEnc;
         private int auth;
         private String hash;
 
-        public ClientAuthenticateJson( String nonce, String nonceEnc, int auth, String hash ) {
-            this.nonce = nonce;
+        public ClientAuthenticateJson(String nonceEnc, int auth, String hash ) {
             this.nonceEnc = nonceEnc;
             this.auth = auth;
             this.hash = hash;
@@ -29,19 +27,17 @@ public class ClientAuthenticate extends PostRequest {
 
         @Override
         public String toString() {
-            return "ClientAuthenticateJson [nonce=" + this.nonce + ", nonceEnc=" + this.nonceEnc + ", " +
+            return "ClientAuthenticateJson [nonceEnc=" + this.nonceEnc + ", " +
                     "auth=" + this.auth + ", hash=" + this.hash + "]";
         }
 
     }
 
-    private String nonce;
     private String nonceEnc;
     private int auth;
     private String hash;
 
-    public ClientAuthenticate(String nonce, String nonceEnc, int auth, String hash){
-        this.nonce = nonce;
+    public ClientAuthenticate(String nonceEnc, int auth, String hash){
         this.nonceEnc = nonceEnc;
         this.auth = auth;
         this.hash = hash;
@@ -50,7 +46,7 @@ public class ClientAuthenticate extends PostRequest {
     @Override
     protected String doInBackground(Void... params) {
 
-        ClientAuthenticateJson caJson = new ClientAuthenticateJson(this.nonce, this.nonceEnc, this.auth, this.hash);
+        ClientAuthenticateJson caJson = new ClientAuthenticateJson(this.nonceEnc, this.auth, this.hash);
 
         Gson gson = new Gson();
         String json = gson.toJson(caJson);
@@ -69,7 +65,7 @@ public class ClientAuthenticate extends PostRequest {
     }
 
     protected void onPostExecute(String result) {
-        Log.i("ClientAuthenticate result", "response: " + result);
+        Log.i("ClientAuth result", "response: " + result);
 
         //202 if successfully registered
         //409 is already registered
