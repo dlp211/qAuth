@@ -377,12 +377,12 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 
 		tk1 := authenticate.Encrypt(token1.String(), &pk)
 		tk2 := authenticate.Encrypt(token2.String(), &pk)
-		non := authenticate.IncNonce(request.Nonce, 1)
+		non := authenticate.Encrypt(authenticate.IncNonce(request.Nonce, 1), &pk)
 		hash := authenticate.HashAndSign(tk1, tk2, non)
 		pkg := model.TokenResult{
 			tk1,
 			tk2,
-			authenticate.Encrypt(non, &pk),
+			non,
 			hash,
 		}
 
@@ -403,7 +403,7 @@ func ClientAuthenticate(w http.ResponseWriter, r *http.Request) {
 				model.TokenResult{
 					tk1,
 					tk2,
-					authenticate.Encrypt(non, &pk),
+					non,
 					hash,
 				},
 			},
