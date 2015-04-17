@@ -118,8 +118,6 @@ public class GcmIntentService extends IntentService {
                     //  call verifySig( hash(package+deviceId+nonceEnc), hash )
                     // -> if true
 
-
-
                 } else if (messageID.equals("1")) { //tokenResult & callback
 
                     String token1 = "";
