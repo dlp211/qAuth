@@ -213,8 +213,8 @@ func logout(gcmid string) {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("project_id", "156110196668")
-	req.Header.Set("Authorization", "key=AIzaSyAFqyh9ZZFiY8HRcyUlidAg7IT3rvoN-Pk")
+	req.Header.Set("project_id", "542773875626")
+	req.Header.Set("Authorization", "key=AIzaSyDFz1j1UvitL_ee2wSl2dCzKjeUDcR3N_k")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
