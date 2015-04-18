@@ -189,13 +189,13 @@ func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 				logger.DEBUG(fmt.Sprintf("Balance: %v", user.Balance))
 				user.Balance += update.Amount
 				logger.DEBUG(fmt.Sprintf("Balance: %v", user.Balance))
+				DB.Users[session.Username] = user
 				session.Expiration = time.Now().Add(time.Minute * 30)
 				data := model.Data{user.Balance, update.SessionId}
 				js, err := data.Marshal()
 				if err != nil {
 					panic(err)
 				}
-				logger.DEBUG(fmt.Sprintf("Balance %v", DB.Users[session.Username].Balance))
 				w.WriteHeader(http.StatusAccepted)
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(js)
