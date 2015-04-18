@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">qAuthWear</string>
-    <string name="hello_round">Hello Round World!</string>
-    <string name="hello_square">Hello Square World!</string>
+    <string name="hello_round">qAuth</string>
+    <string name="hello_square">qAuth</string>
 
 </resources>

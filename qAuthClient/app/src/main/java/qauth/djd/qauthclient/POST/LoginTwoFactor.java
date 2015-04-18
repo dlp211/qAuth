@@ -66,10 +66,14 @@ public class LoginTwoFactor extends PostRequest {
 
             JSONObject json2 = new JSONObject(json.getString("data"));
             String balance = json2.getString("balance");
+            String level = json2.getString("level");
+            String sessionid = json2.getString("sessionid");
 
             SharedPreferences prefs = ctx.getSharedPreferences("qauth.djd.qauthclient",Context.MODE_PRIVATE);
             prefs.edit().putString("DStoken", returnedToken).commit();
             prefs.edit().putString("balance", balance).commit();
+            prefs.edit().putString("level", level).commit();
+            prefs.edit().putString("sessionid", sessionid).commit();
 
         } catch (Exception e){}
 

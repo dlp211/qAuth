@@ -3,6 +3,7 @@ package qauth.djd.qauthwear;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.provider.Settings.Secure;
 import android.support.wearable.view.WatchViewStub;
 import android.util.Log;
@@ -317,6 +318,21 @@ public class MainActivity extends Activity implements MessageApi.MessageListener
                     }
                 }
             }).start();
+
+        }  else if (messageEvent.getPath().equals("WARNING")) {
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mTextView.setText("WARNING: Login with 1FA");
+                }
+            });
+
+            Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+            long[] vibrationPattern = {0, 500, 50, 300};
+            //-1 - don't repeat
+            final int indexInPatternToRepeat = -1;
+            vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
         }
     }
 }

@@ -96,17 +96,19 @@ public class SlidingTabsColorsFragment extends Fragment {
          * Populate our tab list with tabs. Each item contains a title, indicator color and divider
          * color, which are used by {@link qauth.djd.qauthclient.main.common.view.SlidingTabLayout}.
          */
-        mTabs.add(new SamplePagerItem(
-                "Providers", // Title
-                Color.parseColor("#FFFFFF"), // Indicator color
-                Color.GRAY // Divider color
-        ));
 
         mTabs.add(new SamplePagerItem(
                 "Bluetooth Devices", // Title
                 Color.parseColor("#FFFFFF"), // Indicator color
                 Color.GRAY // Divider color
         ));
+
+        /*
+        mTabs.add(new SamplePagerItem(
+                "Providers", // Title
+                Color.parseColor("#FFFFFF"), // Indicator color
+                Color.GRAY // Divider color
+        ));*/
 
     }
 

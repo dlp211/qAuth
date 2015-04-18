@@ -10,4 +10,25 @@
         android:layout_height="wrap_content"
         android:textSize="60dp"/>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Withdrawal"
+        android:id="@+id/withdrawal"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="42dp"
+        android:onClick="withdrawal" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Deposit"
+        android:id="@+id/deposit"
+        android:layout_alignTop="@+id/withdrawal"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:onClick="deposit" />
+
 </RelativeLayout>

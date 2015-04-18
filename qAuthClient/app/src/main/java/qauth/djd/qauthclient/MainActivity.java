@@ -287,6 +287,8 @@ public class MainActivity extends Activity  {
 
             Intent intent = ctx.getPackageManager().getLaunchIntentForPackage("qauth.djd.dummyclient");
             intent.putExtra("balance", prefs.getString("balance", "0"));
+            intent.putExtra("level", prefs.getString("level", "-1"));
+            intent.putExtra("sessionid", prefs.getString("sessionid", "0"));
             ctx.startActivity(intent);
 
         } else {
