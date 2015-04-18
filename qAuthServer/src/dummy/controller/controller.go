@@ -83,7 +83,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if user, ok := DB.Users[login.UserName]; ok {
 		if authenticate.Password(login.Password, user.Salt, user.Password) {
-			if user.TwoFactor {
+			if user.TwoFactor && login.TwFac == 1 {
 				nonce, err := authenticate.GenNonce()
 				if err != nil {
 					panic(err)
@@ -93,12 +93,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusAccepted)
 			} else {
 				session := authenticate.RandSeq(10)
-				d := model.Data{user.Balance, session}
+				var level int32 = 0
+				if user.TwoFactor {
+					level = 1
+				}
+				d := model.Data{user.Balance, session, level}
 				js, err := d.Marshal()
 				if err != nil {
 					panic(err)
 				}
-				Session[session] = model.Session{login.UserName, time.Now().Add(time.Minute * 30), login.GcmId}
+				Session[session] = model.Session{login.UserName, time.Now().Add(time.Minute * 30), login.GcmId, level}
 				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(js)
@@ -151,9 +155,9 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	logger.DEBUG(request.Token1)
 	if token.Token == request.Token1 {
 		session := authenticate.RandSeq(10)
-		Session[session] = model.Session{request.UserName, time.Now().Add(time.Minute * 30), request.GcmId}
+		Session[session] = model.Session{request.UserName, time.Now().Add(time.Minute * 30), request.GcmId, 0}
 
-		twRes := model.TwofactorResult{request.Token2, model.Data{request.Balance, session}}
+		twRes := model.TwofactorResult{request.Token2, model.Data{request.Balance, session, 0}}
 		js, err := twRes.Marshal()
 		if err != nil {
 			panic(err)
@@ -184,6 +188,10 @@ func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusGone)
 			return
 		}
+		if session.Level == 1 {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 		if user, ok := DB.Users[session.Username]; ok {
 			if user.Balance+update.Amount > 0.0 {
 				logger.DEBUG(fmt.Sprintf("Balance: %v", user.Balance))
@@ -191,7 +199,7 @@ func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 				logger.DEBUG(fmt.Sprintf("Balance: %v", user.Balance))
 				DB.Users[session.Username] = user
 				session.Expiration = time.Now().Add(time.Minute * 30)
-				data := model.Data{user.Balance, update.SessionId}
+				data := model.Data{user.Balance, update.SessionId, 0}
 				js, err := data.Marshal()
 				if err != nil {
 					panic(err)
@@ -251,7 +259,7 @@ func LoginSession(w http.ResponseWriter, r *http.Request) {
 			logout(login.OldId)
 			session.Expiration = time.Now().Add(time.Minute * 30)
 			if user, ok := DB.Users[session.Username]; ok {
-				data := model.Data{user.Balance, login.SessionId}
+				data := model.Data{user.Balance, login.SessionId, session.Level}
 				js, err := data.Marshal()
 				if err != nil {
 					panic(err)
