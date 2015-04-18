@@ -20,6 +20,7 @@ type Session struct {
 	Username   string
 	Expiration time.Time
 	GcmId      string
+	Level      int32
 }
 
 type LoginSession struct {
@@ -58,6 +59,7 @@ type Login struct {
 	Password string `json:"password"`
 	DeviceId string `json:"deviceId"`
 	GcmId    string `json:"gcmId"`
+	TwFac    int32  `json:"is2FA"`
 }
 
 func (reg *Login) Decode(r io.Reader) error {
@@ -118,6 +120,7 @@ func (reg *RegisterProvider) Marshal() ([]byte, error) {
 type Data struct {
 	Balance   float64 `json:"balance"`
 	SessionId string  `json:"sessionid"`
+	Level     int32   `json:"level"`
 }
 
 func (d *Data) Marshal() ([]byte, error) {
@@ -126,6 +129,7 @@ func (d *Data) Marshal() ([]byte, error) {
 
 type GcmData struct {
 	MessageId string `json:"messageID"`
+	Data      Data   `json:"data"`
 }
 
 type GcmMessage struct {

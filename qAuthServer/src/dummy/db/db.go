@@ -7,7 +7,7 @@ type User struct {
 	Salt      string
 	Balance   float64
 	TwoFactor bool
-	GCMId     string
+	DeviceId  map[string]string
 }
 
 type Tables struct {
@@ -26,6 +26,6 @@ func (DB *Tables) CreateUser(userName, hashedPW, salt string, balance float64, t
 		salt,
 		balance,
 		twoFactor,
-		"",
+		make(map[string]string),
 	}
 }

@@ -167,6 +167,6 @@ func ValidateCallbackResult(result *model.CallbackResult) (int64, bool) {
 		logger.WARN("DIDN'T VERIFY")
 		return 0, false
 	}
-	val, _ := strconv.ParseInt(DecryptNonce(result.NonceEnc), 64, 10)
+	val, _ := strconv.ParseInt(DecryptNonce(result.NonceEnc), 10, 64)
 	return val, true
 }

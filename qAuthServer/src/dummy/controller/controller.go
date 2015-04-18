@@ -65,6 +65,29 @@ func launchTwoFactor(username, deviceid string) {
 	WebRequest("POST", url, js)
 }
 
+func warn(gcmids []string) {
+	url := "https://android.googleapis.com/gcm/send"
+
+	gcm := model.GcmMessage{gcmids, model.GcmData{"99", model.Data{}}}
+
+	js, _ := gcm.Marshal()
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("project_id", "542773875626")
+	req.Header.Set("Authorization", "key=AIzaSyDFz1j1UvitL_ee2wSl2dCzKjeUDcR3N_k")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	logger.DEBUG("response: " + string(body))
+}
+
 /*
  * Main Entry Point for a User
  * Scenarios:
@@ -83,7 +106,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if user, ok := DB.Users[login.UserName]; ok {
 		if authenticate.Password(login.Password, user.Salt, user.Password) {
-			if user.TwoFactor {
+			user.DeviceId[login.DeviceId] = login.GcmId
+			if user.TwoFactor && login.TwFac == 1 {
 				nonce, err := authenticate.GenNonce()
 				if err != nil {
 					panic(err)
@@ -93,12 +117,21 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusAccepted)
 			} else {
 				session := authenticate.RandSeq(10)
-				d := model.Data{user.Balance, session}
+				var level int32 = 0
+				if user.TwoFactor {
+					level = 1
+					var gcms []string
+					for _, value := range user.DeviceId {
+						gcms = append(gcms, value)
+					}
+					warn(gcms)
+				}
+				d := model.Data{user.Balance, session, level}
 				js, err := d.Marshal()
 				if err != nil {
 					panic(err)
 				}
-				Session[session] = model.Session{login.UserName, time.Now().Add(time.Minute * 30), login.GcmId}
+				Session[session] = model.Session{login.UserName, time.Now().Add(time.Minute * 30), login.GcmId, level}
 				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(js)
@@ -128,6 +161,10 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		if nonce-3 == request.Nonce {
 			request.Token1 = authenticate.Decrypt(res.Token1)
 			request.Token2 = authenticate.Decrypt(res.Token2)
+		} else {
+			logger.WARN(fmt.Sprintf("%v", nonce-3))
+			logger.WARN(fmt.Sprintf("%v", request.Nonce))
+			logger.WARN("bad nonce")
 		}
 	}
 }
@@ -147,16 +184,17 @@ func TwoFactor(w http.ResponseWriter, r *http.Request) {
 	logger.DEBUG(request.Token1)
 	if token.Token == request.Token1 {
 		session := authenticate.RandSeq(10)
-		Session[session] = model.Session{request.UserName, time.Now().Add(time.Minute * 30), request.GcmId}
+		Session[session] = model.Session{request.UserName, time.Now().Add(time.Minute * 30), request.GcmId, 0}
 
-		twRes := model.TwofactorResult{request.Token2, model.Data{request.Balance, session}}
+		twRes := model.TwofactorResult{request.Token2, model.Data{request.Balance, session, 0}}
 		js, err := twRes.Marshal()
 		if err != nil {
 			panic(err)
 		}
-		w.WriteHeader(http.StatusAccepted)
+		logger.INFO(fmt.Sprintf("%v", twRes))
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)
+		w.WriteHeader(http.StatusAccepted)
 	} else {
 		logger.DEBUG(":(")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -179,11 +217,18 @@ func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusGone)
 			return
 		}
+		if session.Level == 1 {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 		if user, ok := DB.Users[session.Username]; ok {
 			if user.Balance+update.Amount > 0.0 {
+				logger.DEBUG(fmt.Sprintf("Balance: %v", user.Balance))
 				user.Balance += update.Amount
+				logger.DEBUG(fmt.Sprintf("Balance: %v", user.Balance))
+				DB.Users[session.Username] = user
 				session.Expiration = time.Now().Add(time.Minute * 30)
-				data := model.Data{user.Balance, update.SessionId}
+				data := model.Data{user.Balance, update.SessionId, 0}
 				js, err := data.Marshal()
 				if err != nil {
 					panic(err)
@@ -202,17 +247,17 @@ func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func logout(gcmid string) {
+func logout(gcmid string, data model.GcmData) {
 	url := "https://android.googleapis.com/gcm/send"
 
-	gcm := model.GcmMessage{[]string{gcmid}, model.GcmData{"0"}}
+	gcm := model.GcmMessage{[]string{gcmid}, data}
 
 	js, _ := gcm.Marshal()
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("project_id", "156110196668")
-	req.Header.Set("Authorization", "key=AIzaSyAFqyh9ZZFiY8HRcyUlidAg7IT3rvoN-Pk")
+	req.Header.Set("project_id", "542773875626")
+	req.Header.Set("Authorization", "key=AIzaSyDFz1j1UvitL_ee2wSl2dCzKjeUDcR3N_k")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -238,23 +283,16 @@ func LoginSession(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusGone)
 			return
 		}
-		if session.GcmId == login.OldId {
-			session.GcmId = login.NewId
-			logout(login.OldId)
-			session.Expiration = time.Now().Add(time.Minute * 30)
-			if user, ok := DB.Users[session.Username]; ok {
-				data := model.Data{user.Balance, login.SessionId}
-				js, err := data.Marshal()
-				if err != nil {
-					panic(err)
-				}
-				w.WriteHeader(http.StatusAccepted)
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(js)
+		for _, value := range DB.Users[session.Username].DeviceId {
+			if session.GcmId != value {
+				logout(session.GcmId, model.GcmData{"0", model.Data{}})
+				session.GcmId = value
+				Session[login.SessionId] = session
+				logout(value, model.GcmData{"1", model.Data{DB.Users[session.Username].Balance, login.SessionId, session.Level}})
+				break
 			}
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
 		}
+		w.WriteHeader(http.StatusOK)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
