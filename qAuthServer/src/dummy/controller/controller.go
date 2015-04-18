@@ -68,7 +68,7 @@ func launchTwoFactor(username, deviceid string) {
 func warn(gcmids []string) {
 	url := "https://android.googleapis.com/gcm/send"
 
-	gcm := model.GcmMessage{gcmids, model.GcmData{"99"}}
+	gcm := model.GcmMessage{gcmids, model.GcmData{"99", model.Data{}}}
 
 	js, _ := gcm.Marshal()
 
@@ -247,10 +247,10 @@ func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func logout(gcmid string) {
+func logout(gcmid string, data model.GcmData) {
 	url := "https://android.googleapis.com/gcm/send"
 
-	gcm := model.GcmMessage{[]string{gcmid}, model.GcmData{"0"}}
+	gcm := model.GcmMessage{[]string{gcmid}, data}
 
 	js, _ := gcm.Marshal()
 
@@ -283,23 +283,15 @@ func LoginSession(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusGone)
 			return
 		}
-		if session.GcmId == login.OldId {
-			session.GcmId = login.NewId
-			logout(login.OldId)
-			session.Expiration = time.Now().Add(time.Minute * 30)
-			if user, ok := DB.Users[session.Username]; ok {
-				data := model.Data{user.Balance, login.SessionId, session.Level}
-				js, err := data.Marshal()
-				if err != nil {
-					panic(err)
-				}
-				w.WriteHeader(http.StatusAccepted)
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(js)
+		for _, value := range DB.Users[session.Username].DeviceId {
+			if session.GcmId != value {
+				logout(session.GcmId, model.GcmData{"0", model.Data{}})
+				session.GcmId = value
+				logout(value, model.GcmData{"1", model.Data{DB.Users[session.Username].Balance, login.SessionId, session.Level}})
+				break
 			}
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
 		}
+		w.WriteHeader(http.StatusOK)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}

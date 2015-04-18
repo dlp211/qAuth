@@ -129,6 +129,7 @@ func (d *Data) Marshal() ([]byte, error) {
 
 type GcmData struct {
 	MessageId string `json:"messageID"`
+	Data      Data   `json:"data"`
 }
 
 type GcmMessage struct {
