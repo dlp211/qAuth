@@ -287,6 +287,7 @@ func LoginSession(w http.ResponseWriter, r *http.Request) {
 			if session.GcmId != value {
 				logout(session.GcmId, model.GcmData{"0", model.Data{}})
 				session.GcmId = value
+				Session[login.SessionId] = session
 				logout(value, model.GcmData{"1", model.Data{DB.Users[session.Username].Balance, login.SessionId, session.Level}})
 				break
 			}
