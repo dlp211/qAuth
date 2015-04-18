@@ -83,6 +83,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if user, ok := DB.Users[login.UserName]; ok {
 		if authenticate.Password(login.Password, user.Salt, user.Password) {
+			user.DeviceId[login.DeviceId] = login.GcmId
 			if user.TwoFactor && login.TwFac == 1 {
 				nonce, err := authenticate.GenNonce()
 				if err != nil {
@@ -96,6 +97,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				var level int32 = 0
 				if user.TwoFactor {
 					level = 1
+					//send 1FA warning to all gcm devices
 				}
 				d := model.Data{user.Balance, session, level}
 				js, err := d.Marshal()
