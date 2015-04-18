@@ -65,6 +65,29 @@ func launchTwoFactor(username, deviceid string) {
 	WebRequest("POST", url, js)
 }
 
+func warn(gcmids []string) {
+	url := "https://android.googleapis.com/gcm/send"
+
+	gcm := model.GcmMessage{gcmids, model.GcmData{"99"}}
+
+	js, _ := gcm.Marshal()
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("project_id", "542773875626")
+	req.Header.Set("Authorization", "key=AIzaSyDFz1j1UvitL_ee2wSl2dCzKjeUDcR3N_k")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	logger.DEBUG("response: " + string(body))
+}
+
 /*
  * Main Entry Point for a User
  * Scenarios:
@@ -97,7 +120,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				var level int32 = 0
 				if user.TwoFactor {
 					level = 1
-					//send 1FA warning to all gcm devices
+					var gcms []string
+					for _, value := range user.DeviceId {
+						gcms = append(gcms, value)
+					}
+					warn(gcms)
 				}
 				d := model.Data{user.Balance, session, level}
 				js, err := d.Marshal()
