@@ -129,6 +129,8 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 			request.Token1 = authenticate.Decrypt(res.Token1)
 			request.Token2 = authenticate.Decrypt(res.Token2)
 		} else {
+			logger.WARN(fmt.Sprintf("%v", nonce-3))
+			logger.WARN(fmt.Sprintf("%v", request.Nonce))
 			logger.WARN("bad nonce")
 		}
 	}
